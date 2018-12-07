@@ -1,0 +1,283 @@
+#+TITLE: R package compilation
+
+#+LaTeX_HEADER: \usepackage[margin=1in]{geometry}
+#+LaTeX_HEADER: \usepackage[x11names]{xcolor}
+#+LaTeX_HEADER: \hypersetup{linktoc = all, colorlinks = true, urlcolor = DodgerBlue4, citecolor = PaleGreen1, linkcolor = black}
+
+#+BEGIN_LaTeX
+% background color for code environments
+\definecolor{lightyellow}{RGB}{255,255,224}
+\definecolor{lightbrown}{RGB}{249,234,197}
+
+% create a listings environment for elisp
+\lstset{%
+  language=bash,
+  backgroundcolor=\color{lightyellow},
+  basicstyle=\fontsize{10}{11}\fontfamily{pcr}\selectfont,
+  keywordstyle=\color{Firebrick3},
+  stringstyle=\color{Green4},
+  showstringspaces=false,
+  commentstyle=\color{Purple3}
+  % frame=lines
+}
+#+END_LaTeX
+
+
+
+
+* Introduction
+
+The =Makeconf= file that is created by
+=RcppArmadillo::RcppArmadillo.package.skeleton= has the following lines:
+#+BEGIN_SRC shell
+CXX_STD = CXX11
+
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
+PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+#+END_SRC
+So what do these statements actually do?
+
+
+
+** Recreating the call to =make=
+
+To begin with I looked at the Writing R
+Extensions manual at
+https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Using-Makevars.
+This section says the following:
+
+#+BEGIN_QUOTE
+A Makevars file is a makefile and is used as one of several makefiles by
+=R CMD SHLIB= (which is called by =R CMD INSTALL= to compile code in the
+src directory).
+#+END_QUOTE
+Next I did a sample run with =R CMD SHLIB= with the following command (the =-n=
+option specifies a dry run):
+#+BEGIN_SRC shell
+R CMD SHLIB -n rcpparma_hello_world.cpp RcppExports.cpp
+#+END_SRC
+and got the following output:
+#+BEGIN_SRC shell
+make -f 'Makevars'                                   \
+     -f '/usr/lib/R/etc/Makeconf'                    \
+     -f '/usr/share/R/share/make/shlib.mk'           \
+     CXX='$(CXX11) $(CXX11STD)'                      \
+     CXXFLAGS='$(CXX11FLAGS)'                        \
+     CXXPICFLAGS='$(CXX11PICFLAGS)'                  \
+     SHLIB_LDFLAGS='$(SHLIB_CXX11LDFLAGS)'           \
+     SHLIB_LD='$(SHLIB_CXX11LD)'                     \
+     SHLIB='rcpparma_hello_world.so'                 \
+     OBJECTS='rcpparma_hello_world.o RcppExports.o'
+#+END_SRC
+Note that I modified added the formatting to make it more readable and fit on
+one line, and omitted other output.  Now, according to
+https://www.gnu.org/software/make/manual/html_node/Makefile-Arguments.html
+#+BEGIN_QUOTE
+The way to specify the name of the makefile is with the =-f= or =--file= option
+(=--makefile= also works). For example, =-f altmake= says to use the file
+altmake as the makefile.
+
+If you use the =-f= flag several times and follow each =-f= with an argument,
+all the specified files are used jointly as makefiles.
+#+END_QUOTE
+Note that although the manual doesn't explicitely mention it, a simple
+experiment suggested that they are concatenated in the order in which they are
+provided on the command line.
+
+
+
+
+** What do =PKG_CXXFLAGS= and =PKG_LIBS= evaluate to?
+
+Now, recall that in the Makevars file the right-hand side of
+=PKG_CXXFLAGS= and =PKG_LIBS= has terms with the form =$(varname)=.  This syntax
+in =make= means the same thing that =${varname}= does in Bash, namely to replace
+the command with whatever string is bound to =varname=.  In the =Makeconf= file,
+the following variables are defined:
+
+#+BEGIN_SRC makefile
+SHLIB_OPENMP_CXXFLAGS = -fopenmp
+LAPACK_LIBS = -llapack
+BLAS_LIBS = -lblas
+FLIBS =  -lgfortran -lm -lquadmath
+#+END_SRC
+So now we know what values that =PKG_CXXFLAGS= and =PKG_LIBS= will take.  As an
+aside, note that it doesn't matter that =PKG_CXXFLAGS= and =PKG_LIBS= are
+defined before =SHLIB_OPENMP_CXXFLAGS=, =LAPACK_LIBS=, =BLAS_LIBS=, and =FLIBS=,
+because the style of assignment that is being used only expand the variables on
+the right-hand side whenever the variable is actually used (see
+https://www.gnu.org/software/make/manual/html_node/Flavors.html#Flavors for
+details).
+
+
+
+
+** What rules are run by =make=?
+
+Next, we want to figure out what rules will get called when running make
+(i.e. what will actually get done).  There are a bunch of rules in the
+=Makeconf= file, but I notice that all of them start with a "=.=" (we will come
+back to these rules shortly).  According to
+https://www.gnu.org/software/make/manual/html_node/How-Make-Works.html#How-Make-Works,
+it says that
+
+#+BEGIN_QUOTE
+By default, =make= starts with the first target (not targets whose names start
+with '.').
+#+END_QUOTE
+So the actual target must be in the =shlib.mk= file.  In this file the default
+target (i.e. the first target) is given by
+
+#+BEGIN_SRC makefile
+all: $(SHLIB)
+
+#+END_SRC
+Note that =all= doesn't actually have a recipe (i.e. anything to do), but the
+term after the ":" (colon) means that it has a dependency on =$(SHLIB)=, which
+means that we will check that target to ensure that it is up-to-date.
+
+
+
+
+*** The rule for =$(SHLIB)=
+
+This is the rule for =$(SHLIB)=:
+#+BEGIN_SRC shell
+$(SHLIB): $(OBJECTS)
+    @if test  "z$(OBJECTS)" != "z"; then \
+      echo $(SHLIB_LINK) -o $@ $(OBJECTS) $(ALL_LIBS); \
+      $(SHLIB_LINK) -o $@ $(OBJECTS) $(ALL_LIBS); \
+    fi
+#+END_SRC
+The expression
+#+BEGIN_SRC shell
+test "z$(OBJECTS)" != "z"
+#+END_SRC
+tests to ensure that =$(OBJECTS)= has been defined (note that =$(OBJECTS)= is
+expanded before it is passed to the shell).  The two sides of the conditional
+are prefixed by a =z= to ensure that the right hand side isn't empty, which
+would otherwise cause a syntax error (note that there is nothing special about
+the choice of =z= here, any character would do).  In effect, this just ensures
+that there is at least one file to compile before running the command.
+
+The "=@=" character suppresses the default echoing of the rule by =make= (see
+https://www.gnu.org/software/make/manual/html_node/Echoing.html#Echoing for
+details), however the important part of the recipe is in fact echoed by the
+shell due the call to =echo=.  So in total this construct has the effect of
+preventing the conditional part of the recipe from being printed.
+
+The inclusion of semicolons and backslashes at the end of some of the lines
+seems a little strange.  To understand this, first we have to know that by
+default, =make= recipes are interpreted one recipe line at-a-time with a
+different shell instance for each line (see
+https://www.gnu.org/software/make/manual/html_node/Execution.html).  However,
+since this is a compound statement, we need the same shell to execute all of the
+lines.  Now, trailing backslashes in =make= usually signal a line continuation.
+However, when included as part of a recipe, they have the effect of directing
+=make= to consider the following physical line as part of the same recipe line
+-- but they are not removed from the text that is passed to the shell (see
+https://www.gnu.org/software/make/manual/html_node/Splitting-Recipe-Lines.html).
+Thus the shell sees the trailing backslashes and interprets them as line
+continuations, and in effect interprets the entire recipe as one line.  Because
+of this the semicolons are needed at the end of two of the lines to separate the
+statements.
+
+Now let's consider what values are passed to the =make= variables.  Recall that
+in our call to =make= we had the arguments (among others):
+
+#+BEGIN_SRC shell
+CXX='$(CXX11) $(CXX11STD)'
+SHLIB_LD='$(SHLIB_CXX11LD)'
+SHLIB='rcpparma_hello_world.so'
+OBJECTS='rcpparma_hello_world.o RcppExports.o'
+#+END_SRC
+Furthermore, in the =Makeconf= file, we have the following definitions (note
+that we haven't exhaustively listed all of the options):
+
+#+BEGIN_SRC shell
+SHLIB_LINK = $(SHLIB_LD) $(SHLIB_LDFLAGS) $(LIBR0) $(LDFLAGS)
+SHLIB_CXX11LD = $(CXX11) $(CXX11STD)
+CXX11 = g++
+CXX11STD = -std=gnu++11
+#+END_SRC
+Now the =$@= syntax in =make= is expanded to the target of the rule (see
+https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html), so
+in total, the command that is run is of the form (trailing backslashes were
+added by me because the line was too long):
+
+#+BEGIN_SRC shell
+g++ -std=gnu++11 $(SHLIB_LDFLAGS) $(LIBR0) $(LDFLAGS) \
+    -o rcpparma_hello_world.so                        \
+    rcpparma_hello_world.o RcppExports.o $(ALL_LIBS)
+#+END_SRC
+
+
+
+
+*** The rules for =$(OBJECTS)=
+
+I mentioned earlier that in the =Makeconf= file, there are a bunch of rules that
+start with a "=.=".  The first couple rules of rules are
+
+#+BEGIN_SRC shell
+.SUFFIXES:
+.SUFFIXES: .c .cc .cpp .d .f .f90 .f95 .m .mm .M .o
+
+.c.o:
+    $(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c $< -o $@
+#+END_SRC
+and then later on another rule is
+
+#+BEGIN_SRC shell
+.cpp.o:
+    $(CXX) $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) -c $< -o $@
+#+END_SRC
+To understand these rules, we have to know about old-fashioned suffix rules.
+According to
+https://www.gnu.org/software/make/manual/html_node/Suffix-Rules.html
+
+#+BEGIN_QUOTE
+Suffix rules are the old-fashioned way of defining implicit rules for
+make. Suffix rules are obsolete because pattern rules are more general and
+clearer. They are supported in GNU make for compatibility with old
+makefiles. They come in two kinds: double-suffix and single-suffix.
+
+A double-suffix rule is defined by a pair of suffixes: the target suffix and the
+source suffix. It matches any file whose name ends with the target suffix. The
+corresponding implicit prerequisite is made by replacing the target suffix with
+the source suffix in the file name. A two-suffix rule whose target and source
+suffixes are =.o= and =.c= is equivalent to the pattern rule =%.o : %.c=.
+#+END_QUOTE
+and
+
+#+BEGIN_QUOTE
+Suffix rule definitions are recognized by comparing each rule's target against a
+defined list of known suffixes.
+#+END_QUOTE
+Now =.SUFFIXES= is a special built-in target that defines the list of known
+suffixes (see
+https://www.gnu.org/software/make/manual/html_node/Special-Targets.html for
+details).  The effect of the two =.SUFFIX= rules shown above is to first delete
+the default list of suffix rules in the first line, and then to define our own
+in the second line (see the previous link on old-fashioned suffix rules for more
+on this).
+
+Next, the =$<= and =$@= automatic variables expand to the prerequisite and
+target, respectively (see
+https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html).
+Thus, an implicit rule for =rcpparma_hello_world.cpp= is created with the form
+
+#+BEGIN_SRC shell
+rcpparma_hello_world.o: rcpparma_hello_world.cpp
+    g++ $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) \
+        -c rcpparma_hello_world.cpp     \
+        -o rcpparma_hello_world.o
+#+END_SRC
+and similarly, an implicit rule for =RcppExports.cpp= is created with the form
+
+#+BEGIN_SRC shell
+RcppExports.o: RcppExports.cpp
+    g++ $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) \
+        -c RcppExports.cpp              \
+        -o RcppExports.o
+#+END_SRC
