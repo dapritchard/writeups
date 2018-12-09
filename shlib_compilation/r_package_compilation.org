@@ -1,4 +1,4 @@
-#+TITLE: R package compilation
+#+TITLE: R package SO construction
 
 #+LaTeX_HEADER: \usepackage[margin=0.9in]{geometry}
 #+LaTeX_HEADER: \usepackage[x11names]{xcolor}
@@ -66,7 +66,7 @@ make -f 'Makevars'                                   \
      CXXPICFLAGS='$(CXX11PICFLAGS)'                  \
      SHLIB_LDFLAGS='$(SHLIB_CXX11LDFLAGS)'           \
      SHLIB_LD='$(SHLIB_CXX11LD)'                     \
-     SHLIB='anRpackage.so'                 \
+     SHLIB='anRpackage.so'                           \
      OBJECTS='rcpparma_hello_world.o RcppExports.o'
 #+END_SRC
 Note that I modified added the formatting to make it more readable and fit on
@@ -213,6 +213,12 @@ g++ -std=gnu++11 $(SHLIB_LDFLAGS) $(LIBR0) $(LDFLAGS) \
     -o rcpparma_hello_world.so                        \
     rcpparma_hello_world.o RcppExports.o $(ALL_LIBS)
 #+END_SRC
+Now, the value of =$(ALL_LIBS)= is the following.
+
+#+BEGIN_SRC shell
+ALL_LIBS = $(PKG_LIBS) $(SHLIB_LIBADD) $(LIBR)# $(LIBINTL)
+#+END_SRC
+So we see that this is where =$(PKG_LIBS)= comes into play.
 
 
 
@@ -284,16 +290,167 @@ RcppExports.o: RcppExports.cpp
         -c RcppExports.cpp              \
         -o RcppExports.o
 #+END_SRC
+Now, the values of =$(ALL_CPPFLAGS)= and =$(ALL_CXXFLAGS)= are the following.
+
+#+BEGIN_SRC shell
+ALL_CXXFLAGS = $(R_XTRA_CXXFLAGS) $(PKG_CXXFLAGS) $(CXXPICFLAGS) \
+               $(SHLIB_CXXFLAGS) $(CXXFLAGS)
+#+END_SRC
+So we see that this is where =$(PKG_CXXFLAGS)= comes in to play.
 
 
 
 
 ** How the call to make is constructed
 
+*** The call to the R shell wrapper with arguments =CMD SHLIB=
 
-*** The details of the =.shlib_internal= function
+The =R= shell wrapper is a Bash script that goes through a loop to parse the
+arguments.  A portion of the loop is shown below.
+#+BEGIN_SRC shell
+while test -n "${1}"; do
+  case ${1} in
+    # code omitted
+    CMD)
+      shift;
+      export R_ARCH
+      . "${R_HOME}/etc${R_ARCH}/ldpaths"
+      exec sh "${R_HOME}/bin/Rcmd" "${@}" ;;
+    # code omitted
+  esac
+  shift
+done
+#+END_SRC
+The sourcing of the =ldpaths= file does some work setting an environmental
+variable that is not of interest to us, and then =sh= is exec'd with the =Rcmd=
+script as its input.
 
-At the beginning of =.shlib_internal= a convenience function is defined that
+
+
+
+*** The call to =CMD= with argument =SHLIB= (among others)
+
+=Rcmd= is a Bash script.  The first part of =Rcmd= does some more work setting
+up environmental variables.  Then, there is a case statement that sets the value
+of =${CMD}=, which is then taken as the command for =exec=, as shown below.
+
+For our example, the value of =${1}= going into the case statement is =SHLIB=,
+so this is also the value that =${CMD}$= takes (possibly with or without an
+absolute path).  The value for =${extra}= only gets modified in the omitted code
+paths so for our example that is just an empty string.
+
+#+BEGIN_SRC shell
+extra=
+case "${1}" in
+## this was a separate command prior to 2.10.0
+  Rd2txt)
+    # code omitted
+    ;;
+## removed in 2.15.0
+  Rd2dvi)
+    # code omitted
+    ;;
+  *)
+    if test -x "${R_HOME}/bin/${1}"; then
+      cmd="${R_HOME}/bin/${1}"
+    else
+      cmd="${1}"
+    fi
+    ;;
+esac
+shift
+
+exec "${cmd}" ${extra} "${@}"
+#+END_SRC
+
+
+
+
+*** The call to =SHLIB=
+
+The =SHLIB= file consists only of the following lines (with some formatting
+added by me).  Note that the line with =echo= ends with a pipe, not a line
+continuation.
+
+#+BEGIN_SRC R
+#
+# ${R_HOME}/bin/SHLIB
+
+echo 'tools:::.SHLIB()' |
+    R_DEFAULT_PACKAGES=NULL  \
+    "${R_HOME}/bin/R"        \
+        --no-restore --slave --no-site-file --no-init-file --args $@
+#+END_SRC
+As an aside, something that I find surprising is that =SHLIB= doesn't have a
+shebang.  As it turns out, none of the =CMD= scripts (e.g. BATCH, SHLIB,
+INSTALL, etc.) have a shebang.  On my system, running =exec= with Bash (recall
+that =Rcmd= is a Bash script) on a file without a shebang results in the file
+being processed as a Bash script, but it seems like it would hardly be good
+practice to rely on this behavior.
+
+The code starts by writing =tools:::.SHLIB()= to standard output which is then
+piped to the standard input of the following command.  The second command starts
+with the expression ~R_DEFAULT_PACKAGES=NULL~, which has the effect of placing
+the value of placing the name / value pair in the list of environmental
+variables for duration of the command.  Then the R shell wrapper is invoked (yet
+again!), with the arguments
+
+#+BEGIN_SRC R
+--no-restore --slave --no-site-file --no-init-file --args $@
+#+END_SRC
+The =--args= syntax means that R shell wrapper does not process any of the
+commands after it.  The =$@= syntax means that all of the command-line arguments
+that were passed to the script are expanded before the command is invoked.  Note
+that the =$@= expression is not surrounded by quotes, so that unfortunately the
+shell will erroneously split arguments that have whitespace in them.
+
+
+
+
+*** The second call to the R shell wrapper
+
+Once again the R shell wrapper is invoked.  The argument parsing loop steps
+through the arguments until it reaches the =--args= arguments at which point the
+loop breaks.  The call to the =R= binary occurs in the following code section.
+Note that for our example =${debugger}= is bound to the empty string.  The value
+of =${args}= is the arguments that came before the =--args= argument as a
+space-delimited string, and the value of =${@}= is an array with all of the
+arguments that came after =--args= (including =--args= itself).
+
+#+BEGIN_SRC shell
+## Startup
+if test -z "${debugger}"; then
+  exec "${R_binary}"  ${args} "${@}"
+else
+  # code omitted
+fi
+#+END_SRC
+
+
+
+
+*** The details of the =tools:::.SHLIB= function
+
+The code for =.SHLIB= is simply a wrapper for =.shlib_internal= as shown below.
+The value of =TRUE= for the first argument of =commandArgs= has the effect of
+only passing on the arguments from the command line which came after the
+=--args= argument.
+
+#+BEGIN_SRC R
+## for R CMD SHLIB on all platforms
+.SHLIB <- function()
+{
+    status <- .shlib_internal(commandArgs(TRUE))
+    q("no", status = (status != 0), runLast=FALSE)
+}
+#+END_SRC
+
+
+
+
+*** The details of the =tools:::.shlib_internal= function
+
+At the beginning of =.shlib_internal=, a convenience function is defined that
 will be used later.
 
 #+BEGIN_SRC R
@@ -301,7 +458,8 @@ p1 <- function(...) paste(..., collapse = " ")
 #+END_SRC
 Furthermore, the suffix used for dynamically linked libraries for the host
 operating system (usually either =.dll= or =.so=) is bound to the variable
-=OBJ_EXTS=, and the name of the make application is bound to =MAKE=.
+=OBJ_EXTS=, and the name of the make application is bound to =MAKE= in the
+following section of code.
 
 #+BEGIN_SRC R
 WINDOWS <- .Platform$OS.type == "windows"
