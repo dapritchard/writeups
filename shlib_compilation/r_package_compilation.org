@@ -1,6 +1,6 @@
 #+TITLE: R package compilation
 
-#+LaTeX_HEADER: \usepackage[margin=1in]{geometry}
+#+LaTeX_HEADER: \usepackage[margin=0.9in]{geometry}
 #+LaTeX_HEADER: \usepackage[x11names]{xcolor}
 #+LaTeX_HEADER: \hypersetup{linktoc = all, colorlinks = true, urlcolor = DodgerBlue4, citecolor = PaleGreen1, linkcolor = black}
 
@@ -54,7 +54,7 @@ src directory).
 Next I did a sample run with =R CMD SHLIB= with the following command (the =-n=
 option specifies a dry run):
 #+BEGIN_SRC shell
-R CMD SHLIB -n rcpparma_hello_world.cpp RcppExports.cpp
+R CMD SHLIB -n -o anRpackage.so rcpparma_hello_world.cpp RcppExports.cpp
 #+END_SRC
 and got the following output:
 #+BEGIN_SRC shell
@@ -66,7 +66,7 @@ make -f 'Makevars'                                   \
      CXXPICFLAGS='$(CXX11PICFLAGS)'                  \
      SHLIB_LDFLAGS='$(SHLIB_CXX11LDFLAGS)'           \
      SHLIB_LD='$(SHLIB_CXX11LD)'                     \
-     SHLIB='rcpparma_hello_world.so'                 \
+     SHLIB='anRpackage.so'                 \
      OBJECTS='rcpparma_hello_world.o RcppExports.o'
 #+END_SRC
 Note that I modified added the formatting to make it more readable and fit on
@@ -108,6 +108,9 @@ because the style of assignment that is being used only expand the variables on
 the right-hand side whenever the variable is actually used (see
 https://www.gnu.org/software/make/manual/html_node/Flavors.html#Flavors for
 details).
+
+What we don't know yet is how =make= will actually make use of these variables,
+but we will begin to investigate this in the upcoming sections.
 
 
 
@@ -258,9 +261,9 @@ Now =.SUFFIXES= is a special built-in target that defines the list of known
 suffixes (see
 https://www.gnu.org/software/make/manual/html_node/Special-Targets.html for
 details).  The effect of the two =.SUFFIX= rules shown above is to first delete
-the default list of suffix rules in the first line, and then to define our own
-in the second line (see the previous link on old-fashioned suffix rules for more
-on this).
+the default list of known suffixes in the first line, and then to define our own
+list in the second line (see the previous link on old-fashioned suffix rules for
+more on this).
 
 Next, the =$<= and =$@= automatic variables expand to the prerequisite and
 target, respectively (see
@@ -280,4 +283,143 @@ RcppExports.o: RcppExports.cpp
     g++ $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) \
         -c RcppExports.cpp              \
         -o RcppExports.o
+#+END_SRC
+
+
+
+
+** How the call to make is constructed
+
+
+*** The details of the =.shlib_internal= function
+
+At the beginning of =.shlib_internal= a convenience function is defined that
+will be used later.
+
+#+BEGIN_SRC R
+p1 <- function(...) paste(..., collapse = " ")
+#+END_SRC
+Furthermore, the suffix used for dynamically linked libraries for the host
+operating system (usually either =.dll= or =.so=) is bound to the variable
+=OBJ_EXTS=, and the name of the make application is bound to =MAKE=.
+
+#+BEGIN_SRC R
+WINDOWS <- .Platform$OS.type == "windows"
+if (!WINDOWS) {
+    # code omitted.  Obtain values for `SHLIB_EXT` and `MAKE`, among others.
+} else {
+    # code omitted.  Obtain values for `SHLIB_EXT` and `MAKE`, among others.
+}
+#+END_SRC
+Next, an initial value is defined for the =makefiles= variable in the form of a
+character vector providing the location of some of the makefiles that will be
+processed later in the call to Make.
+
+#+BEGIN_SRC R
+site <- Sys.getenv("R_MAKEVARS_SITE", NA_character_)
+if (is.na(site))
+    site <- file.path(paste0(R.home("etc"), rarch), "Makevars.site")
+makefiles <-
+    c(file.path(paste0(R.home("etc"), rarch), "Makeconf"),
+      if(file.exists(site)) site,
+      file.path(R.home("share"), "make",
+                if (WINDOWS) "winshlib.mk" else "shlib.mk"))
+#+END_SRC
+Next, the command-line arguments are processed as part of the following loop.
+During the course of the loop, values are assigned to the variables =shlib= and
+=objs=.  The value for =shlib= is either (i) the value specified by the =-o= or
+=--output= option, or (ii) if one was not provided it takes the name of the
+first filename provided, and replacing the suffix with =.so= or =.dll= (so for
+our example, =anRpackage.so=).  The value of =objs= is a character vector with
+each element the name of a target object file (so for our example
+=c(rcpparma_hello_world.o, RcppExports.o)=).
+
+#+BEGIN_SRC R
+while(length(args)) {
+
+    # code omitted.  Binds values to `shlib` and `objs`
+
+    args <- args[-1L]
+}
+
+if (length(objs)) objs <- paste0(objs, OBJ_EXT, collapse = " ")
+#+END_SRC
+Next, a single character string with the names of the target objects is bound to
+`makeobjs`.  Then the script looks to see if a =Makevars= file is available.  If
+so, then "Makevars" is prepended to =makefiles=.  Then the =Makevars= file is
+scanned for an =OBJECT= variable, and if one is found then the =MAKEOBJS= file
+is set to the empty string.
+
+The =Makeconf= is also scanned for a =CXX_STD= variable.  If one is found, then
+=with_cxx= is set to =TRUE=, and one of =use_cxx17=, =use_cxx14=, =use_cxx11=,
+or =use_cxx98= is also set to =TRUE=, depending on the value of =CXX_STD=.  For
+our example, the value of =use_cxx11= is set to =TRUE=.
+
+#+BEGIN_SRC R
+makeobjs <- paste0("OBJECTS=", shQuote(objs))
+if (WINDOWS && file.exists("Makevars.win")) {
+    # code ommitted but is very similar to the non-Windows case
+} else if (file.exists("Makevars")) {
+    makefiles <- c("Makevars", makefiles)
+    lines <- readLines("Makevars", warn = FALSE)
+    if (length(grep("^OBJECTS *=", lines, perl = TRUE, useBytes = TRUE)))
+        makeobjs <- ""
+    if (length(ll <- grep("^CXX_STD *=", lines, perl = TRUE,
+                          value = TRUE, useBytes = TRUE))) {
+        cxxstd <- gsub("^CXX_STD *=", "", ll)
+        cxxstd <- gsub(" *", "", cxxstd)
+        if (cxxstd == "CXX17") {
+            use_cxx17 <- TRUE
+            with_cxx <- TRUE
+        }
+        else if (cxxstd == "CXX14") {
+            use_cxx14 <- TRUE
+            with_cxx <- TRUE
+        }
+        else if (cxxstd == "CXX11") {
+            use_cxx11 <- TRUE
+            with_cxx <- TRUE
+        }
+        else if (cxxstd == "CXX98") {
+            use_cxx98 <- TRUE
+            with_cxx <- TRUE
+        }
+    }
+}
+#+END_SRC
+Next, the variables that will be passed to Make on the command line are bound to
+=makeargs=.  The code paths for the various C++ standards are very similar to
+the C++11 standards and are omitted.
+
+#+BEGIN_SRC R
+makeargs <- paste0("SHLIB=", shQuote(shlib))
+if (with_f9x) {
+    makeargs <- c("SHLIB_LDFLAGS='$(SHLIB_FCLDFLAGS)'",
+                  "SHLIB_LD='$(SHLIB_FCLD)'", makeargs)
+} else if (with_cxx) {
+    makeargs <- if (use_cxx17)
+        # code omitted
+    else if (use_cxx14)
+        # code omitted
+    else if (use_cxx11)
+        c("CXX='$(CXX11) $(CXX11STD)'",
+          "CXXFLAGS='$(CXX11FLAGS)'",
+          "CXXPICFLAGS='$(CXX11PICFLAGS)'",
+          "SHLIB_LDFLAGS='$(SHLIB_CXX11LDFLAGS)'",
+          "SHLIB_LD='$(SHLIB_CXX11LD)'", makeargs)
+    else if (use_cxx98)
+        # code omitted
+    else
+        c("SHLIB_LDFLAGS='$(SHLIB_CXXLDFLAGS)'",
+          "SHLIB_LD='$(SHLIB_CXXLD)'", makeargs)
+}
+#+END_SRC
+The variables =makefiles=, =makeargs=, and =makeobjs= define the command that is
+used to invoke Make.  If other libraries were specified from the command line or
+are needed for some other reason, then there is a section of code that appends
+them to =makeargs=, but we will omit these details.
+
+#+BEGIN_SRC R
+cmd <- paste(MAKE, p1(paste("-f", shQuote(makefiles))), p1(makeargs),
+             p1(makeobjs))
 #+END_SRC
