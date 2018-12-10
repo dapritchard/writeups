@@ -9,8 +9,12 @@
 \definecolor{lightyellow}{RGB}{255,255,224}
 \definecolor{lightbrown}{RGB}{249,234,197}
 
-% create a listings environment for elisp
-\lstset{%
+% \lstset{%
+%   basicstyle=\fontsize{10}{11}\fontfamily{pcr}\selectfont
+% }
+
+% create a listings environment for Bash
+\lstdefinestyle{bash}{%
   language=bash,
   backgroundcolor=\color{lightyellow},
   basicstyle=\fontsize{10}{11}\fontfamily{pcr}\selectfont,
@@ -19,6 +23,23 @@
   showstringspaces=false,
   commentstyle=\color{Purple3}
   % frame=lines
+}
+
+
+% create a light blue colored background for R scripts
+\lstdefinestyle{r-script}{%
+  language=R,
+  backgroundcolor=\color{Blue1!5},
+  basicstyle=\fontsize{10}{11}\fontfamily{pcr}\selectfont,
+  keywordstyle=\color{Firebrick3},
+  commentstyle=\color{DarkOrchid4},
+  stringstyle=\color{Blue1},
+  showstringspaces=false,
+  otherkeywords = {},
+  deletekeywords={action, args, as, char, commandArgs, csv, data, file, getenv,
+    integer, install, installed, interactive, length, library, max, mean, min,
+    nchar, new, numeric, packages, path, print, read, save, set, substr,
+    summary, write, \%/\%, \%_\%}
 }
 #+END_LaTeX
 
@@ -29,6 +50,7 @@
 
 The =Makeconf= file that is created by
 =RcppArmadillo::RcppArmadillo.package.skeleton= has the following lines:
+#+LATEX: \lstset{style=bash}
 #+BEGIN_SRC shell
 CXX_STD = CXX11
 
@@ -431,7 +453,9 @@ fi
 
 *** The details of the =tools:::.SHLIB= function
 
-The code for =.SHLIB= is simply a wrapper for =.shlib_internal= as shown below.
+#+LATEX: \lstset{style=r-script}
+
+THE code for =.SHLIB= is simply a wrapper for =.shlib_internal= as shown below.
 The value of =TRUE= for the first argument of =commandArgs= has the effect of
 only passing on the arguments from the command line which came after the
 =--args= argument.
