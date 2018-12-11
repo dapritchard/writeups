@@ -1,4 +1,4 @@
-#+TITLE: R package SO construction
+#+TITLE: R package shared object construction
 
 #+LaTeX_HEADER: \usepackage[margin=0.9in]{geometry}
 #+LaTeX_HEADER: \usepackage[x11names]{xcolor}
@@ -9,9 +9,9 @@
 \definecolor{lightyellow}{RGB}{255,255,224}
 \definecolor{lightbrown}{RGB}{249,234,197}
 
-% \lstset{%
-%   basicstyle=\fontsize{10}{11}\fontfamily{pcr}\selectfont
-% }
+\lstset{%
+  basicstyle=\fontsize{10}{11}\fontfamily{pcr}\selectfont
+}
 
 % create a listings environment for Bash
 \lstdefinestyle{bash}{%
@@ -48,8 +48,72 @@
 
 * Introduction
 
+This document aims to describe the process by which shared objects (also known
+as shared libraries) are constructed.  To restrict the scope of this document
+and to make it more concrete, I consider an example where we build a shared
+object for the example package that is created by the
+=RcppArmadillo.package.skeleton= function from the =RcppArmadillo= package.  I
+find this to be a useful example because it can be easily recreated by the
+reader, and because it is a nontrivial example that requires linking against a
+number of libraries.
+
+The structure of the document is as follows.  In Section 2, we start with a call
+to =R CMD SHLIB=, which is one of the utilities that R provides to build shared
+objects.  Once we know the form of the call to Make that is invoked by =R CMD
+SHLIB=, we walk through the instructions provided to Make to understand how the
+rules for the objects files are defined.
+
+Then, in Section 3 we go back to the start of the call to =R CMD SHLIB= to
+understand how the call to Make was constructed.  Between this part and the part
+from Section 2 we have completely described how the shared object was built
+using the =R CMD SHLIB= command.
+
+
+
+
+** The example package description
+
+*** The skeleton package structure
+
+The package skeleton that is created by a call to
+=RcppArmadillo.package.skeleton()= is called =anRpackage= and has the following
+structure.
+
+#+BEGIN_SRC shell
+.
+|-- DESCRIPTION
+|-- man
+|   |-- anRpackage-package.Rd
+|   `-- rcpparma_hello_world.Rd
+|-- NAMESPACE
+|-- R
+|   `-- RcppExports.R
+|-- Read-and-delete-me
+`-- src
+    |-- Makevars
+    |-- Makevars.win
+    |-- rcpparma_hello_world.cpp
+    `-- RcppExports.cpp
+#+END_SRC
+
+
+
+
+*** The Makevars file
+
+Of most relevance to our interests in the example package is the =Makevars=
+file.  In the Writing R Extensions manual at
+https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Using-Makevars, it
+says the following.
+
+#+BEGIN_QUOTE
+A Makevars file is a makefile and is used as one of several makefiles by
+=R CMD SHLIB= (which is called by =R CMD INSTALL= to compile code in the
+src directory).
+#+END_QUOTE
 The =Makeconf= file that is created by
-=RcppArmadillo::RcppArmadillo.package.skeleton= has the following lines:
+=RcppArmadillo::RcppArmadillo.package.skeleton= has the following lines.
+
 #+LATEX: \lstset{style=bash}
 #+BEGIN_SRC shell
 CXX_STD = CXX11
@@ -57,24 +121,18 @@ CXX_STD = CXX11
 PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
 PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 #+END_SRC
-So what do these statements actually do?
+We will try to figure out the effect of these statements over the course of this
+document.
 
 
 
-** Recreating the call to =make=
 
-To begin with I looked at the Writing R
-Extensions manual at
-https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Using-Makevars.
-This section says the following:
+* Recreating the call to =make=
 
-#+BEGIN_QUOTE
-A Makevars file is a makefile and is used as one of several makefiles by
-=R CMD SHLIB= (which is called by =R CMD INSTALL= to compile code in the
-src directory).
-#+END_QUOTE
-Next I did a sample run with =R CMD SHLIB= with the following command (the =-n=
-option specifies a dry run):
+** The result of the call to =R CMD SHLIB=
+
+To begin, I did a sample run with =R CMD SHLIB= with the following command (the
+=-n= option specifies a dry run):
 #+BEGIN_SRC shell
 R CMD SHLIB -n -o anRpackage.so rcpparma_hello_world.cpp RcppExports.cpp
 #+END_SRC
@@ -91,8 +149,8 @@ make -f 'Makevars'                                   \
      SHLIB='anRpackage.so'                           \
      OBJECTS='rcpparma_hello_world.o RcppExports.o'
 #+END_SRC
-Note that I modified added the formatting to make it more readable and fit on
-one line, and omitted other output.  Now, according to
+Note that I modified the formatting to make it more readable and fit on one
+line, and omitted other output.  Now, according to
 https://www.gnu.org/software/make/manual/html_node/Makefile-Arguments.html
 #+BEGIN_QUOTE
 The way to specify the name of the makefile is with the =-f= or =--file= option
@@ -109,11 +167,11 @@ provided on the command line.
 
 
 
-** What do =PKG_CXXFLAGS= and =PKG_LIBS= evaluate to?
+*** What =PKG_CXXFLAGS= and =PKG_LIBS= evaluate to
 
 Now, recall that in the Makevars file the right-hand side of
 =PKG_CXXFLAGS= and =PKG_LIBS= has terms with the form =$(varname)=.  This syntax
-in =make= means the same thing that =${varname}= does in Bash, namely to replace
+in Make means the same thing that =${varname}= does in Bash, namely to replace
 the command with whatever string is bound to =varname=.  In the =Makeconf= file,
 the following variables are defined:
 
@@ -131,15 +189,15 @@ the right-hand side whenever the variable is actually used (see
 https://www.gnu.org/software/make/manual/html_node/Flavors.html#Flavors for
 details).
 
-What we don't know yet is how =make= will actually make use of these variables,
+What we don't know yet is how Make will actually make use of these variables,
 but we will begin to investigate this in the upcoming sections.
 
 
 
 
-** What rules are run by =make=?
+** The rules run by Make
 
-Next, we want to figure out what rules will get called when running make
+Next, we want to figure out what rules will get called when running Make
 (i.e. what will actually get done).  There are a bunch of rules in the
 =Makeconf= file, but I notice that all of them start with a "=.=" (we will come
 back to these rules shortly).  According to
@@ -147,7 +205,7 @@ https://www.gnu.org/software/make/manual/html_node/How-Make-Works.html#How-Make-
 it says that
 
 #+BEGIN_QUOTE
-By default, =make= starts with the first target (not targets whose names start
+By default, Make starts with the first target (not targets whose names start
 with '.').
 #+END_QUOTE
 So the actual target must be in the =shlib.mk= file.  In this file the default
@@ -164,7 +222,7 @@ means that we will check that target to ensure that it is up-to-date.
 
 
 
-*** The rule for =$(SHLIB)=
+** The rule for =$(SHLIB)=
 
 This is the rule for =$(SHLIB)=:
 #+BEGIN_SRC shell
@@ -185,7 +243,7 @@ would otherwise cause a syntax error (note that there is nothing special about
 the choice of =z= here, any character would do).  In effect, this just ensures
 that there is at least one file to compile before running the command.
 
-The "=@=" character suppresses the default echoing of the rule by =make= (see
+The "=@=" character suppresses the default echoing of the rule by Make (see
 https://www.gnu.org/software/make/manual/html_node/Echoing.html#Echoing for
 details), however the important part of the recipe is in fact echoed by the
 shell due the call to =echo=.  So in total this construct has the effect of
@@ -193,22 +251,22 @@ preventing the conditional part of the recipe from being printed.
 
 The inclusion of semicolons and backslashes at the end of some of the lines
 seems a little strange.  To understand this, first we have to know that by
-default, =make= recipes are interpreted one recipe line at-a-time with a
+default, Make recipes are interpreted one recipe line at-a-time with a
 different shell instance for each line (see
 https://www.gnu.org/software/make/manual/html_node/Execution.html).  However,
 since this is a compound statement, we need the same shell to execute all of the
-lines.  Now, trailing backslashes in =make= usually signal a line continuation.
+lines.  Now, trailing backslashes in Make usually signal a line continuation.
 However, when included as part of a recipe, they have the effect of directing
-=make= to consider the following physical line as part of the same recipe line
+Make to consider the following physical line as part of the same recipe line
 -- but they are not removed from the text that is passed to the shell (see
 https://www.gnu.org/software/make/manual/html_node/Splitting-Recipe-Lines.html).
 Thus the shell sees the trailing backslashes and interprets them as line
 continuations, and in effect interprets the entire recipe as one line.  Because
-of this the semicolons are needed at the end of two of the lines to separate the
+of this the semicolons are needed at the end of some of the lines to separate the
 statements.
 
-Now let's consider what values are passed to the =make= variables.  Recall that
-in our call to =make= we had the arguments (among others):
+Now let's consider what values are passed to the Make variables.  Recall that
+in our call to Make we had the arguments (among others):
 
 #+BEGIN_SRC shell
 CXX='$(CXX11) $(CXX11STD)'
@@ -225,7 +283,7 @@ SHLIB_CXX11LD = $(CXX11) $(CXX11STD)
 CXX11 = g++
 CXX11STD = -std=gnu++11
 #+END_SRC
-Now the =$@= syntax in =make= is expanded to the target of the rule (see
+Now the =$@= syntax in Make is expanded to the target of the rule (see
 https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html), so
 in total, the command that is run is of the form (trailing backslashes were
 added by me because the line was too long):
@@ -240,12 +298,18 @@ Now, the value of =$(ALL_LIBS)= is the following.
 #+BEGIN_SRC shell
 ALL_LIBS = $(PKG_LIBS) $(SHLIB_LIBADD) $(LIBR)# $(LIBINTL)
 #+END_SRC
-So we see that this is where =$(PKG_LIBS)= comes into play.
+So we see that this is where =$(PKG_LIBS)= comes into play, and that the
+definition of =$(PKG_LIBS)= in the =Makeconf= file has the effect of adding the
+directives
+
+#+BEGIN_SRC shell
+-fopenmp -llapack -lblas -lgfortran -lm -lquadmath
+#+END_SRC
+to the shared object build call.
 
 
 
-
-*** The rules for =$(OBJECTS)=
+** The rules for =$(OBJECTS)=
 
 I mentioned earlier that in the =Makeconf= file, there are a bunch of rules that
 start with a "=.=".  The first couple rules of rules are
@@ -263,8 +327,9 @@ and then later on another rule is
 .cpp.o:
     $(CXX) $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) -c $< -o $@
 #+END_SRC
-To understand these rules, we have to know about old-fashioned suffix rules.
-According to
+Other rules specify compilation for Fortan and Objective C files, and we will
+ignore them for this discussion.  To understand these rules, we have to know
+about old-fashioned suffix rules.  According to
 https://www.gnu.org/software/make/manual/html_node/Suffix-Rules.html
 
 #+BEGIN_QUOTE
@@ -291,7 +356,7 @@ https://www.gnu.org/software/make/manual/html_node/Special-Targets.html for
 details).  The effect of the two =.SUFFIX= rules shown above is to first delete
 the default list of known suffixes in the first line, and then to define our own
 list in the second line (see the previous link on old-fashioned suffix rules for
-more on this).
+more discussion of this point).
 
 Next, the =$<= and =$@= automatic variables expand to the prerequisite and
 target, respectively (see
@@ -318,17 +383,36 @@ Now, the values of =$(ALL_CPPFLAGS)= and =$(ALL_CXXFLAGS)= are the following.
 ALL_CXXFLAGS = $(R_XTRA_CXXFLAGS) $(PKG_CXXFLAGS) $(CXXPICFLAGS) \
                $(SHLIB_CXXFLAGS) $(CXXFLAGS)
 #+END_SRC
-So we see that this is where =$(PKG_CXXFLAGS)= comes in to play.
+So we see that this is where =$(PKG_CXXFLAGS)= comes in to play, and that the
+definition of =$(PKG_CXXFLAGS)= in the =Makeconf= file has the effect of adding
+the directive
+
+#+BEGIN_SRC shell
+-fopenmp
+#+END_SRC
+to the object files build calls.
 
 
 
 
-** How the call to make is constructed
+* How the call to Make is constructed
 
-*** The call to the R shell wrapper with arguments =CMD SHLIB=
+In this section we now go back to the original call to
+
+#+BEGIN_SRC shell
+R CMD SHLIB -o anRpackage.so rcpparma_hello_world.cpp RcppExports.cpp
+#+END_SRC
+to try to understand how the call to Make that we observed in Section 2.1 was
+constructed.
+
+
+
+
+** The call to the R shell wrapper with arguments =CMD SHLIB= (among others)
 
 The =R= shell wrapper is a Bash script that goes through a loop to parse the
-arguments.  A portion of the loop is shown below.
+arguments.  A portion of the loop is shown below (the =--args= case will have
+relevance to us later on).
 #+BEGIN_SRC shell
 while test -n "${1}"; do
   case ${1} in
@@ -339,27 +423,26 @@ while test -n "${1}"; do
       . "${R_HOME}/etc${R_ARCH}/ldpaths"
       exec sh "${R_HOME}/bin/Rcmd" "${@}" ;;
     # code omitted
+    --args)
+      break ;;
+    # code omitted
   esac
   shift
 done
 #+END_SRC
 The sourcing of the =ldpaths= file does some work setting an environmental
-variable that is not of interest to us, and then =sh= is exec'd with the =Rcmd=
-script as its input.
+variable that is not of interest to us, and then we see that =sh= is exec'd with
+the =Rcmd= script as its input.
 
 
 
 
-*** The call to =CMD= with argument =SHLIB= (among others)
+** The call to =Rcmd= with argument =SHLIB= (among others)
 
-=Rcmd= is a Bash script.  The first part of =Rcmd= does some more work setting
-up environmental variables.  Then, there is a case statement that sets the value
-of =${CMD}=, which is then taken as the command for =exec=, as shown below.
-
-For our example, the value of =${1}= going into the case statement is =SHLIB=,
-so this is also the value that =${CMD}$= takes (possibly with or without an
-absolute path).  The value for =${extra}= only gets modified in the omitted code
-paths so for our example that is just an empty string.
+=Rcmd= is a Bash script (although for our example it is exec'd as an =sh=
+script).  The first part of =Rcmd= does some more work setting up environmental
+variables.  Then there is a case statement that sets the value of =${CMD}=,
+which is then taken as the command for =exec=, as shown below.
 
 #+BEGIN_SRC shell
 extra=
@@ -384,15 +467,19 @@ shift
 
 exec "${cmd}" ${extra} "${@}"
 #+END_SRC
+For our example, the value of =${1}= going into the case statement is =SHLIB=,
+so this is also the value that =${CMD}= takes (possibly with or without an
+absolute path).  The value for =${extra}= only gets modified in the omitted code
+paths so for our example that is just an empty string.
 
 
 
 
-*** The call to =SHLIB=
+** The call to =SHLIB=
 
-The =SHLIB= file consists only of the following lines (with some formatting
-added by me).  Note that the line with =echo= ends with a pipe, not a line
-continuation.
+The entire =SHLIB= file consists only of the following lines (with some
+formatting added by me).  Note that the line with =echo= ends with a pipe, not a
+line continuation.
 
 #+BEGIN_SRC R
 #
@@ -413,31 +500,34 @@ practice to rely on this behavior.
 The code starts by writing =tools:::.SHLIB()= to standard output which is then
 piped to the standard input of the following command.  The second command starts
 with the expression ~R_DEFAULT_PACKAGES=NULL~, which has the effect of placing
-the value of placing the name / value pair in the list of environmental
-variables for duration of the command.  Then the R shell wrapper is invoked (yet
-again!), with the arguments
+the name / value pair in the list of environmental variables for duration of the
+command.  Then the R shell wrapper is invoked (yet again!), with the arguments
 
 #+BEGIN_SRC R
 --no-restore --slave --no-site-file --no-init-file --args $@
 #+END_SRC
-The =--args= syntax means that R shell wrapper does not process any of the
-commands after it.  The =$@= syntax means that all of the command-line arguments
-that were passed to the script are expanded before the command is invoked.  Note
-that the =$@= expression is not surrounded by quotes, so that unfortunately the
-shell will erroneously split arguments that have whitespace in them.
+The =--args= argument has the effect that R shell wrapper does not process any
+of the commands after it.  The =$@= syntax means that all of the command-line
+arguments that were passed to the script are expanded before the command is
+invoked.  For our case it expands to the following expression.
+
+#+BEGIN_SRC shell
+-o anRpackage.so rcpparma_hello_world.cpp RcppExports.cpp
+#+END_SRC
+Note that the =$@= expression is not surrounded by quotes, so that
+unfortunately the shell will erroneously split arguments that have whitespace in
+them.
 
 
 
 
-*** The second call to the R shell wrapper
+** The second call to the R shell wrapper
 
 Once again the R shell wrapper is invoked.  The argument parsing loop steps
-through the arguments until it reaches the =--args= arguments at which point the
-loop breaks.  The call to the =R= binary occurs in the following code section.
-Note that for our example =${debugger}= is bound to the empty string.  The value
-of =${args}= is the arguments that came before the =--args= argument as a
-space-delimited string, and the value of =${@}= is an array with all of the
-arguments that came after =--args= (including =--args= itself).
+through the arguments (recall the form of this from Section 3.1) until it
+reaches the =--args= arguments at which point the loop breaks.  Then later in
+the R shell wrapper, the call to the =R= binary occurs in the following code
+section.
 
 #+BEGIN_SRC shell
 ## Startup
@@ -447,15 +537,22 @@ else
   # code omitted
 fi
 #+END_SRC
+Although we omit the details here, we note that for our example =${debugger}= is
+bound to the empty string, so this is the code path that is taken.  The value of
+=${args}= is the arguments that came before the =--args= argument as a
+space-delimited string, and the value of =${@}= is an array with all of the
+arguments that came after =--args= (including =--args= itself).
 
 
 
-
-*** The details of the =tools:::.SHLIB= function
+** The details of the =tools:::.SHLIB= function
 
 #+LATEX: \lstset{style=r-script}
 
-THE code for =.SHLIB= is simply a wrapper for =.shlib_internal= as shown below.
+Note that at this point, the R binary has been invoked, and that in this and the
+following sections, the code that is being described is R code.
+
+The code for =.SHLIB= is simply a wrapper for =.shlib_internal= as shown below.
 The value of =TRUE= for the first argument of =commandArgs= has the effect of
 only passing on the arguments from the command line which came after the
 =--args= argument.
@@ -472,7 +569,7 @@ only passing on the arguments from the command line which came after the
 
 
 
-*** The details of the =tools:::.shlib_internal= function
+** The details of the =tools:::.shlib_internal= function
 
 At the beginning of =.shlib_internal=, a convenience function is defined that
 will be used later.
@@ -480,10 +577,15 @@ will be used later.
 #+BEGIN_SRC R
 p1 <- function(...) paste(..., collapse = " ")
 #+END_SRC
-Furthermore, the suffix used for dynamically linked libraries for the host
+In the upcoming code blocks, the function begins to collect the values for
+variables that will later be put together to provide the call to Make that we
+saw in Section 2.1.
+
+To begin with, the suffix used for dynamically linked libraries for the host
 operating system (usually either =.dll= or =.so=) is bound to the variable
-=OBJ_EXTS=, and the name of the make application is bound to =MAKE= in the
-following section of code.
+=SHLIB_EXT=, and the name of the make application is bound to Make in the
+following section of code.  On my system the value of =SHLIB_EXT= is bound to
+=c(".so")=, and the value of =MAKE= is bound =c("make")=.
 
 #+BEGIN_SRC R
 WINDOWS <- .Platform$OS.type == "windows"
@@ -495,7 +597,8 @@ if (!WINDOWS) {
 #+END_SRC
 Next, an initial value is defined for the =makefiles= variable in the form of a
 character vector providing the location of some of the makefiles that will be
-processed later in the call to Make.
+processed later in the call to Make.  On my system the value of =makefiles= is
+bound to =c("/usr/lib/R/etc/Makeconf", "/usr/share/R/share/make/shlib.mk")=.
 
 #+BEGIN_SRC R
 site <- Sys.getenv("R_MAKEVARS_SITE", NA_character_)
@@ -507,14 +610,18 @@ makefiles <-
       file.path(R.home("share"), "make",
                 if (WINDOWS) "winshlib.mk" else "shlib.mk"))
 #+END_SRC
-Next, the command-line arguments are processed as part of the following loop.
-During the course of the loop, values are assigned to the variables =shlib= and
-=objs=.  The value for =shlib= is either (i) the value specified by the =-o= or
-=--output= option, or (ii) if one was not provided it takes the name of the
-first filename provided, and replacing the suffix with =.so= or =.dll= (so for
-our example, =anRpackage.so=).  The value of =objs= is a character vector with
-each element the name of a target object file (so for our example
-=c(rcpparma_hello_world.o, RcppExports.o)=).
+Next, the command-line arguments are processed as part of the following loop
+(the details of the loop are omitted since the relevant sections are a little
+long and messy).  During the course of the loop, values are assigned to the
+variables =shlib= and =objs=.  The value for =shlib= is either (i) the value
+specified by the =-o= or =--output= option, or (ii) if one was not provided it
+takes the basename of the first filename provided and appends the appropriate
+=.so= or =.dll= suffix.  For our example we provided the =-o anRpackage.so=
+option, so the value of =shlib= is bound to =c("anRpackage.so")=.
+
+The value of =objs= is a character vector with each element the name of a target
+object file.  For our example the value is bound to =c(rcpparma_hello_world.o,
+RcppExports.o)=.
 
 #+BEGIN_SRC R
 while(length(args)) {
@@ -527,12 +634,13 @@ while(length(args)) {
 if (length(objs)) objs <- paste0(objs, OBJ_EXT, collapse = " ")
 #+END_SRC
 Next, a single character string with the names of the target objects is bound to
-`makeobjs`.  Then the script looks to see if a =Makevars= file is available.  If
-so, then "Makevars" is prepended to =makefiles=.  Then the =Makevars= file is
-scanned for an =OBJECT= variable, and if one is found then the =MAKEOBJS= file
-is set to the empty string.
+=makeobjs=.  Then the script looks to see if a =Makevars= file is available.  If
+so, then =c("Makevars")= is prepended to =makefiles= (in our example this is the
+case).  Then the =Makevars= file is scanned for an =OBJECT= variable, and if one
+is found then the =MAKEOBJS= file is set to the empty string (in our example
+=Makevars= does not have such a line).
 
-The =Makeconf= is also scanned for a =CXX_STD= variable.  If one is found, then
+The =Makeconf= file is also scanned for a =CXX_STD= variable.  If one is found, then
 =with_cxx= is set to =TRUE=, and one of =use_cxx17=, =use_cxx14=, =use_cxx11=,
 or =use_cxx98= is also set to =TRUE=, depending on the value of =CXX_STD=.  For
 our example, the value of =use_cxx11= is set to =TRUE=.
