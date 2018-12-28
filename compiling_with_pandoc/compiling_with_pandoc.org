@@ -1,0 +1,39 @@
+* Some initial notes
+
+** The default templates
+
+*** See the templates
+
+To see the template, use =pandoc -D FORMAT=, so for LaTeX that would be =pandoc -D latex=.
+
+
+
+*** YAML headers
+
+The values you can change are the variables shown in
+https://pandoc.org/MANUAL.html#variables-set-by-pandoc?
+
+What about flags?  Can you use =true= or =false=?
+
+header-includes:
+  - \hypersetup{colorlinks=true,
+                urlcolor=blue}
+
+
+
+*** Inject data into the header
+
+
+/usr/bin/pandoc +RTS -K512m -RTS _main.utf8.md
+    --to latex --from markdown+autolink_bare_uris+ascii_identifiers+tex_math_single_backslash
+    --output _main.tex --table-of-contents --toc-depth 2 --self-contained --number-sections
+    --highlight-style tango --pdf-engine xelatex --natbib
+    --include-in-header latex/preamble.tex --include-before-body latex/before_body.tex
+    --include-after-body latex/after_body.tex --top-level-division=chapter
+    --lua-filter=latex/sidebar.lua --variable tables=yes --standalone
+
+Use the =--include-in-header= option.
+--include-before-body
+--include-after-body
+--self-contained
+--highlight-style tango
