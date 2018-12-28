@@ -1,0 +1,77 @@
+* Setting up a fresh Lubuntu distribution
+
+** Basic setup
+
+*** Caps Lock mapped to Control
+
+See /Changing keyboard setups/ file.
+
+
+
+
+*** Change keyboard speed
+
+Click on the start button and select =Preferences -> Keyboard and Mouse=, and then
+choose the =Keyboard= tab at the top.  I set mine to:
+
+  - Repeat delay: 100
+  - Repeat interval: 20
+
+
+
+
+*** Change monitor settings
+
+Click on the start button and select =Preferences -> Monitor Settings=.  I set
+mine to:
+
+  - Resolution: 1920 x 1080
+  - Refresh rate: Auto
+
+
+
+*** Add Firefox extensions
+
+Install AdBlock Plus and Privacy Badger extensions from the browser.
+
+
+
+
+*** Configure appearance
+
+The panel is what Lubuntu calls the taskbar at the bottom of the screen.
+Right-click on it and select =Panel Setttings= for some useful configuration
+options.  The geometry tab lets you control the location and size of the panel.
+Also, you can customize the applets (the clickeable icons on the right or bottom
+of the panel) by clicking the =Panel Applets= tab.  Click =Add= or =Remove= to
+add or remove an applet, and click =Up= or =Down= to change the order of the
+selected applet relative to the other applets.
+
+
+
+
+** Installing software
+
+*** Basic utilities
+
+#+BEGIN_SRC shell
+sudo apt-get install htop
+#+END_SRC
+
+
+
+
+*** Install config files
+
+Copy =.bashrc= file.
+
+
+
+
+*** Install Emacs
+
+#+BEGIN_SRC shell
+sudo add-apt-repository ppa:kelleyk/emacs
+sudo apt-get update
+sudo apt install emacs26
+#+END_SRC
