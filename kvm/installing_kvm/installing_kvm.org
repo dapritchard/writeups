@@ -1,0 +1,169 @@
+* installing KVM
+
+** Useful links
+
+Installation instructions:
+
+  - https://www.linux.com/learn/intro-to-linux/2017/5/creating-virtual-machines-kvm-part-1
+  - https://help.ubuntu.com/community/KVM/Installation
+  - https://www.cyberciti.biz/faq/installing-kvm-on-ubuntu-16-04-lts-server/
+
+Lightweight Linux distributions:
+
+  - https://fossbytes.com/best-lightweight-linux-distros/
+  - https://www.techradar.com/news/best-lightweight-linux-distro
+
+
+
+
+** Installation commands
+
+*** Install the necessary software
+
+First check that the computer supports KVM (from the linux.com link).
+#+BEGIN_SRC shell
+$ egrep -o '(vmx|svm)' /proc/cpuinfo
+vmx
+vmx
+vmx
+vmx
+#+END_SRC
+It should match against =vmx= if you have Intel hardware or =svm= if you have
+AMD hardware, one entry per core.  The example above is shown for my system with
+4 cores.
+
+I used the commands provided in the nixCraft link.
+#+BEGIN_SRC shell
+sudo apt-get install qemu-kvm libvirt-bin virtinst bridge-utils cpu-checker
+#+END_SRC
+
+Then check the installation:
+#+BEGIN_SRC shell
+$ kvm-ok
+INFO: /dev/kvm exists
+KVM acceleration can be used
+#+END_SRC
+
+
+
+*** Optionally install GUI manager
+
+#+BEGIN_SRC shell
+sudo apt-get install virt-manager
+#+END_SRC
+
+
+
+*** Add yourself to the =libvrt= group
+
+Check to see if you are a member of the =libvirtd= group.
+#+BEGIN_SRC shell
+groups | grep -o libvirtd
+#+END_SRC
+
+If not, then you can add yourself using the command below.  The call to =id=
+simply returns your username.
+#+BEGIN_SRC shell
+sudo adduser `id -un` libvirtd
+#+END_SRC
+
+
+
+
+*** Check to see if the installation is successful
+
+Run the following command with the expected output.  Apparently the blank list
+is expected, and if there was a problem some sort of error would be signalled.
+#+BEGIN_SRC shell
+$ virsh list --all
+ Id    Name                           State
+----------------------------------------------------
+
+#+END_SRC
+
+
+
+
+** Create virtual machine instances
+
+*** Downloading distributions
+
+Find the distribution or distributions that you want to download.  For example,
+I went to https://lubuntu.net/downloads/ to look for a lubuntu distribution, and
+found the link which I downloaded as shown below.
+
+#+BEGIN_SRC shell
+cd /var/lib/libvirt/boot/
+sudo wget http://cdimage.ubuntu.com/lubuntu/releases/16.04/release/lubuntu-16.04.3-desktop-amd64.iso
+#+END_SRC
+
+
+
+
+*** Setting up the virtual machine
+
+At this point I used the Virtual Machine Manager as described in the Create a
+Virtual Machine section in
+https://www.linux.com/learn/intro-to-linux/2017/5/creating-virtual-machines-kvm-part-1.
+To start the manager, use the following command.
+
+#+BEGIN_SRC shell
+sudo virt-manager
+#+END_SRC
+
+Once the manager started up, I went to the application menu and selected =File
+-> New Virtual Machine=.  Then I popup window showed up and I selected the radio
+button =Local install media= and clicked =Forward=.  In the next window, I
+selected the radio button =Use ISO image=, and clicked browse.
+
+This brought up another window for selecting the storage volume.  You can select
+the button =Browse Local= to look for an existing storage volume or choose the
+location of a new storage volume.  Since I don't have any storage volumes set up
+yet, I have to create a new storage volume.  The default location of
+=/var/lib/libvirt/images= seems fine to me so I don't bother changing it.
+
+To create a new storage volume, I clicked the green "plus" button which brought
+up yet another menu.  Here you have to choose the name, format, and size of the
+volume.  For format, it suggested the =qcow2= format as the default.  Since I
+don't know what this is, and it is also the format suggested on the nixCraft
+page as well, I leave it as the default.  For the volume size, I choose 10GB
+since I am little tight on memory on my system (I hope this is enough!).  For
+name I chose the nondescript name of =vm_storage_10gb.qcow2=.
+
+Next, I look for the ISO file that I'm using by clicking =Browse Local=.  I
+navigate to =/var/lib/libvirt/boot= and select my lubuntu ISO and click =Open=.
+
+This takes me back to the original pop-up window, and I now click =Forward=,
+leaving the =Automatically detect operating system based on install media=
+checkbox checked.
+
+The next screen lets me choose the amount of memory and CPUs that I will make
+available for the VM.  I choose 2GB and 2 cores.
+
+The next screen asks me if I want to enable storage and if so, how much storage
+to allocate.  I make sure the =Enable storage for this virtual machine= checkbox
+is checked, and choose 10GB since that's the size of the storage pool I created.
+At this point I don't understand the relationship between the two.  Then I click
+=Forward=.
+
+In the final screen TODO: I clicked it and forgot to record what I did.
+
+At this point, a new instance of Virtual Machine Manager popped up with an
+install screen for Lubuntu showing!  Success!!
+
+
+
+
+* Using virtual machines
+
+** Recording snapshots
+
+It is worth noting that there are two kinds of snapshots: shutoff and running
+(is this the right term?).
+
+To record a snapshot using the command line, see
+https://www.cyberciti.biz/faq/how-to-create-create-snapshot-in-linux-kvm-vmdomain/.
+
+To record a snapshot with =virt-manager=, click on =View -> Snapshots= in the
+menu bar.  This will provide a pop-up window where you can input a name and
+description.
