@@ -16,6 +16,11 @@ GOTCHA: Packrat tries to unload libraries (unanswered questions: which, why?)
 when running =init=.  For me this failed when =devtools= is loaded.  Thus, it is
 advisable to initialize packrat from a clean session using e.g. =R --vanilla=.
 
+GOTCHA: if the =--vanilla= or =--no-environ= command line argument was provided
+to =R=, or the =R_PROFILE_USER= environmental variable was set or provided in
+one of the environmental files such as =~/.Renviron=, then Packrat will not work
+as desired.
+
 
 
 
@@ -116,8 +121,16 @@ Use =packrat:::isPackratModeOn=.
 
 *** Changing the value of =.libPaths=
 
-Packrat changes the location of the libraries known to =.libPaths=.  This
-affects =install.packages= and =library=.
+Packrat changes the location of the libraries known to =.libPaths= to the
+project directories.  This affects =install.packages= and =library=.  Note that
+even if you set the =R_LIBS= environmental variable before startup or specify it
+in one of the environmental files such as =~/.Renviron=, that the user profile
+code runs after the library search paths have been set, and so overwrites it.
+
+Where exactly?
+  1. =packrat/lib/x86_64-pc-linux-gnu/3.4.4= installed packages
+  2. =packrat/lib-ext/x86_64-pc-linux-gnu/3.4.4= packages that ship with R
+  3. =packrat/lib-R/x86_64-pc-linux-gnu/3.4.4= not sure what this is for!
 
 
 *** Bootstrapping Packrat
@@ -126,3 +139,13 @@ If you obtain a Packrat project from a VCS, then it will typically not include
 the =packrat/lib*/= directories, since these can be derived from other
 information.  Packrat will install them for you if needed (how, by calling the
 .Rprofile function?).
+
+
+*** Installing packages
+
+You can use the usual =install.packages= to install a package.  The installed
+package will be installed into =packrat/lib/x86_64-pc-linux-gnu/3.4.4= due to
+the construction of the directories stored by =.libPaths=.
+
+To include the source package in the directory, call =packrat::snapshot=.  Note
+that this has to be done during the same session that =install.packages= was called.

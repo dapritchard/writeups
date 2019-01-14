@@ -14,7 +14,7 @@ See /Changing keyboard setups/ file.
 Click on the start button and select =Preferences -> Keyboard and Mouse=, and then
 choose the =Keyboard= tab at the top.  I set mine to:
 
-  - Repeat delay: 100
+  - Repeat delay: 150
   - Repeat interval: 20
 
 
@@ -70,6 +70,8 @@ Copy =.bashrc= file.
 
 *** Install Emacs
 
+See
+https://www.reddit.com/r/emacs/comments/8pcw5a/what_is_the_most_painless_way_to_install_emacs_26/.
 #+BEGIN_SRC shell
 sudo add-apt-repository ppa:kelleyk/emacs
 sudo apt-get update

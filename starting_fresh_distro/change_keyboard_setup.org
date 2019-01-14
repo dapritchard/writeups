@@ -8,3 +8,8 @@ I Found this answer https://askubuntu.com/a/586419/447630, but instead of
 =caps:none=, we want =ctrl:nocaps= (does =caps:ctrl_modifier= work as well?).  I
 found the new command by going to the man page for =setxkbmap= and then
 following it to the man page for =xkeyboard-config=.
+
+I.e. use the following command:
+#+BEGIN_SRC sh
+  setxkbmap -option caps:nocaps
+#+END_SRC

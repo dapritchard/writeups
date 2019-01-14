@@ -1,0 +1,11 @@
+* The difference between =R CMD BATCH infile.R= and =R -f infile.R=
+
+The main difference seems to be that =Rcmd=, which gets exec'd from the R shell
+wrapper, has the following line.
+
+#+BEGIN_SRC shell
+. "${R_HOME}/etc${R_ARCH}/Renviron"
+#+END_SRC
+
+However, experimentation shows that the environmental files set in that file are
+set somehow when I run just =R=.

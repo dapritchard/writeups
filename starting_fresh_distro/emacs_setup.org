@@ -1,0 +1,147 @@
+* Configuring Emacs on a new system
+
+Use distribution-specific instructions to install Emacs itself.
+
+
+
+
+** Update and upgrade packages
+
+#+BEGIN_SRC sh
+  sudo apt update
+  sudo apt upgrade
+#+END_SRC
+
+
+
+
+** Clone =.emacs.d= directory
+
+Ensure that some necessary programs are installed.
+#+BEGIN_SRC sh
+  sudo apt install git
+#+END_SRC
+
+From the home directory run the following commands:
+#+BEGIN_SRC sh
+  git clone https://github.com/dpritchLibre/emacs.d.git
+  rm -rf .emacs.d
+  mv emacs.d .emacs.d
+#+END_SRC
+
+
+
+** Install other packages
+
+Install some basic developement tools
+#+BEGIN_SRC sh
+  # pulls in gcc, g++, make, and developement libraries
+  sudo apt install build-essential
+
+  # ensure automake and autoconf are installed
+  sudo apt automake autoconf
+#+END_SRC
+
+Install pdf-tools dependencies
+#+BEGIN_SRC sh
+  sudo apt install libpng-dev zlibg-dev
+  sudo apt install libpoppler-glib-dev
+  sudo apt install libpoppler-private-dev
+  sudo apt install imagemagick
+#+END_SRC
+
+Install =ag=.
+#+BEGIN_SRC sh
+  sudo apt install silversearcher-ag tree
+#+END_SRC
+
+
+
+
+** Lisp install
+
+Install MIT scheme (i.e. the implementaion of scheme used in /The Structure and Interpretation
+of Computer Programs/.
+#+BEGIN_SRC sh
+  sudo apt install mit-scheme
+  sudo apt install libmcrypt4-dev mcrypt mit-scheme-dbg mit-scheme-doc
+#+END_SRC
+
+Install =sbcl=.  Ensure that it is installed to =/usr/bin/sbcl= or else the path
+to =sbcl= in the =init.el= file will be broken.
+#+BEGIN_SRC sh
+  sudo apt install sbcl
+  which sbcl
+#+END_SRC
+
+Install =quicklisp=.  See
+https://astraybi.wordpress.com/2015/08/02/how-to-install-slimesbclquicklisp-into-emacs/ for details.
+
+#+BEGIN_SRC sh
+  cd ~/Downloads/
+  wget https://beta.quicklisp.org/quicklisp.lisp
+  sbcl --load quicklisp.lisp
+#+END_SRC
+
+From within SBCL run the following commands.  Ensure that the call to
+=(ql:quickload "quicklisp-slime-helper")= results in the line =(load
+(expand-file-name "~/quicklisp/slime-helper.el"))=.
+#+BEGIN_SRC lisp
+  (quicklisp-quickstart:install)
+  (ql:add-to-init-file)
+  (ql:quickload "quicklisp-slime-helper")
+  (quit)
+#+END_SRC
+
+
+
+
+** R install
+
+See https://cran.r-project.org/bin/linux/ubuntu/README.html for details.  For
+Ubuntu 16 derivatives add the following line to the =/etc/apt/sources.list= file
+(change the =xenial-cran35/= string to the appropriate codename and R version
+for other versions):
+
+#+BEGIN_SRC sh
+  deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/
+#+END_SRC
+Then run the following code to obtain the key:
+#+BEGIN_SRC sh
+  sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys \
+       E298A3A825C0D65DFD57CBB651716619E084DAB9
+#+END_SRC
+Finally, download R with the following command:
+#+BEGIN_SRC sh
+  sudo apt install r-base r-base-dev
+#+END_SRC
+
+
+
+** Python packages
+
+#+BEGIN_SRC sh
+  sudo apt install python-pip python3-pip
+  sudo -H pip2 install --upgrade pip
+  sudo -H pip3 install --upgrade pip
+#+END_SRC
+
+Install =elpy= dependencies
+#+BEGIN_SRC sh
+  pip3 install --user flake8 jedi
+#+END_SRC
+
+
+
+
+
+** Begin configuration bootstrap
+
+Open Emacs and do the following:
+
+  - Install the Zenburn theme: =M-x package-install =zenburn-theme=
+  - Install additional icons for the modeline: =M-x all-the-icons-install-fonts=
+    (this takes about a minute to perform)
+  - Run =org-babel-tangle= (bound to =C-c C-v t=).
+  - Run =M-x df-tools-install=.  See
+    http://pragmaticemacs.com/emacs/view-and-annotate-pdfs-in-emacs-with-pdf-tools/.
