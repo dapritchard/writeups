@@ -1,6 +1,15 @@
 * Using Packrat for package dependency management in R
 
+** Overview
+
+TODO
+
+
+
+
 ** Useful links
+
+Here are the canonical Packrat links.
 
 https://rstudio.github.io/packrat/
 https://cran.r-project.org/package=packrat
@@ -8,18 +17,111 @@ https://cran.r-project.org/package=packrat
 
 
 
-** packrat initialization
+* New project packrat initialization
 
-Use =packrat::init("~/projects/myprojdir")=.
+** Creating
 
-GOTCHA: Packrat tries to unload libraries (unanswered questions: which, why?)
-when running =init=.  For me this failed when =devtools= is loaded.  Thus, it is
-advisable to initialize packrat from a clean session using e.g. =R --vanilla=.
+Suppose for the time-being that we are starting a new project that we want to
+use Packrat with.  We will later consider adding Packrat to an existing project.
 
-GOTCHA: if the =--vanilla= or =--no-environ= command line argument was provided
-to =R=, or the =R_PROFILE_USER= environmental variable was set or provided in
-one of the environmental files such as =~/.Renviron=, then Packrat will not work
-as desired.
+To start, we use =usethis= to create a package =exampleRPackage=, and initialize
+git in the new directory.  Then we use the =tree= utility to see the contents of
+the new directory (but ignoring the =.git= directory).  As an aside, we note
+that it is helpful to initialize git before initializing Packrat, because the
+Packrat will add a =.gitignore= file for us in the directory if it sees that the
+project is version controlled with git.
+
+#+BEGIN_SRC sh
+  userid@hostname:~$ Rscript --vanilla \
+  >                          -e 'usethis::create_package("exampleRPackage")'
+  ✔ Setting active project to '/home/userid/exampleRPackage'
+  ✔ Creating 'R/'
+  ✔ Creating 'man/'
+  ✔ Writing 'DESCRIPTION'
+  ✔ Writing 'NAMESPACE'
+  dpritch@aspire-a517-51g:~/Downloads$ cd exampleRPackage/
+  userid@hostname:~/exampleRPackage$ git init
+  Initialized empty Git repository in /home/dpritch/Downloads/exampleRPackage/.git/
+  userid@hostname:~/exampleRPackage$ tree -a -I .git
+  .
+  |-- DESCRIPTION
+  |-- man
+  |-- NAMESPACE
+  `-- R
+
+  2 directories, 2 files
+#+END_SRC
+
+Next, let's initialize the project with Packrat.  The command to initialize a
+Packrat project is the R command =packrat::init=.  This leads us to a particular
+difficulty that I had when initializing Packrat.
+
+*GOTCHA #1*: Packrat tries to unload the non-default libraries (unanswered
+question: why?)  when running =init=.  For me the unloading failed when
+=devtools= was loaded.  Thus, it is advisable to initialize packrat from a clean
+session using e.g. =R --vanilla= to avoid any such headaches.
+
+So we run =packrat::init= in a clean session then look at the newly created
+files (ignoring files more than three levels deep).
+
+#+BEGIN_SRC sh
+  userid@hostname:~/exampleRPackage$ Rscript --vanillla -e 'packrat::init(".")'
+  Initializing packrat project in directory:
+  - "~/Downloads/exampleRPackage"
+
+  Adding these packages to packrat:
+              _
+      packrat   0.5.0
+
+  Fetching sources for packrat (0.5.0) ... OK (CRAN current)
+  Snapshot written to '/home/userid/exampleRPackage/packrat/packrat.lock'
+  Installing packrat (0.5.0) ...
+          OK (built source)
+  Initialization complete!
+
+  userid@hostname:~/exampleRPackage$ tree -a --charset=ascii -I '.git' -L 4
+  .
+  |-- DESCRIPTION
+  |-- .gitignore
+  |-- man
+  |-- NAMESPACE
+  |-- packrat
+  |   |-- init.R
+  |   |-- lib
+  |   |   `-- x86_64-pc-linux-gnu
+  |   |       `-- 3.4.4
+  |   |-- lib-ext
+  |   |   `-- x86_64-pc-linux-gnu
+  |   |       `-- 3.4.4
+  |   |-- lib-R
+  |   |   `-- x86_64-pc-linux-gnu
+  |   |       `-- 3.4.4
+  |   |-- packrat.lock
+  |   |-- packrat.opts
+  |   `-- src
+  |       `-- packrat
+  |           `-- packrat_0.5.0.tar.gz
+  |-- R
+  |-- .Rbuildignore
+  `-- .Rprofile
+
+  14 directories, 9 files
+#+END_SRC
+
+
+
+
+
+
+
+
+
+
+
+GOTCHA #2: if the =--vanilla= or =--no-environ= command line argument was
+provided to =R=, or the =R_PROFILE_USER= environmental variable was set or
+provided in one of the environmental files such as =~/.Renviron=, then Packrat
+will not work as desired.
 
 
 
