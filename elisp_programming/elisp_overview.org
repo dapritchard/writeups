@@ -1,0 +1,36 @@
+* Main resources
+
+** GNU Manuals
+
+The two primary resources are obviously Robert Chassell's /An Introduction to
+Programming in Emacs Lisp/ and Lewis /et al./'s /GNU Emacs Lisp Reference
+Manual/.  As usual, both are available in the info manual, or you can find them
+online at the following locations.
+
+  - https://www.gnu.org/software/emacs/manual/eintr.html
+  - https://www.gnu.org/software/emacs/manual/elisp.html
+
+
+
+
+** Useful sites
+
+  -The essential Elisp libraries:
+   http://www.wilfred.me.uk/blog/2013/03/31/essential-elisp-libraries/
+
+
+
+
+* Interactive programming
+
+** The =*scratch*= buffer
+
+The =*scratch*= buffer is a Lisp buffer that is used for writing and evaluating
+commands.
+
+
+
+
+** The =ielm= REPL
+
+Use the interactive command =ielm= to access an Emacs Lisp REPL.
