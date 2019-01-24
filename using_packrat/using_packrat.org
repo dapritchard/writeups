@@ -137,10 +137,10 @@ project is version controlled with git.
   + Writing 'DESCRIPTION'
   + Writing 'NAMESPACE'
 
-  dpritch@aspire-a517-51g:~/Downloads$ cd exampleRPackage/
+  userid@hostname:~/Downloads$ cd exampleRPackage/
   userid@hostname:~/exampleRPackage$ git init
-
   Initialized empty Git repository in /home/dpritch/Downloads/exampleRPackage/.git/
+
   userid@hostname:~/exampleRPackage$ tree -a -I .git
   .
   |-- DESCRIPTION
@@ -181,8 +181,8 @@ specific the local system.
   - "~/Downloads/exampleRPackage"
 
   Adding these packages to packrat:
-
-      packrat  0.5.0
+              _
+      packrat   0.5.0
 
   Fetching sources for packrat (0.5.0) ... OK (CRAN current)
   Snapshot written to '/home/userid/exampleRPackage/packrat/packrat.lock'
@@ -224,7 +224,7 @@ specific the local system.
 
 ** The project =.Rprofile= file
 
-*** The =.Rprofile= and other related files
+*** The contents of =.Rprofile=
 
 In the shell session below we can see that Packrat places the =.Rprofile= file
 at the top level of you project directory with the following contents.  The
@@ -304,16 +304,82 @@ might need to install Packrat for is if you copy a project from one system to
 another.
 
 The second, and main purpose that =packrat/init.R= fulfills, is to turn Packrat
-on at startup.  We describe what exactly this means in what follows.
+on at startup.  We describe what exactly this means in the following section.
 
 
 
 
+** Packrat's takover of =.libPaths=
+
+The Packrat package has a concept of a "Packrat mode" which is either on or off
+at any time.  When it is "on", it is with respect to a given project.  The
+project can be changed, but for now we will consider only a single project.
 
 
 
 
-** The =.gitignore= and =.Rbuildignore= files
+*** Checking that Packrat mode is on
+
+Use =packrat:::isPackratModeOn= to check if Packrat mode is on.
+
+
+
+
+*** The values of =.libPaths=
+
+Packrat changes the location of the libraries known to =.libPaths= to the
+project directories.  This affects =install.packages= and =library=.  Note that
+even if you set the =R_LIBS= environmental variable before startup or specify it
+in one of the environmental files such as =~/.Renviron=, that the user profile
+code runs after the library search paths have been set, and overwrites it as a
+result.  For the example project created earlier, the values of the data
+structure accessed by =.libPaths= is the following.
+
+  # 1. =packrat/lib/x86_64-pc-linux-gnu/3.4.4= installed packages
+  # 2. =packrat/lib-ext/x86_64-pc-linux-gnu/3.4.4= packages that ship with R
+  # 3. =packrat/lib-R/x86_64-pc-linux-gnu/3.4.4= TODO: not sure what this is for!
+  1. =packrat/lib/x86_64-pc-linux-gnu/3.4.4=
+  2. =packrat/lib-ext/x86_64-pc-linux-gnu/3.4.4=
+  3. =packrat/lib-R/x86_64-pc-linux-gnu/3.4.4=
+Let's take a closer look at the structure of the project directory tree.  We can
+see that there are three subdirectories in the =packrat= directory that contain
+installed packages:  =lib=, =lib-ext=, and =lib-R=.
+
+TODO: more here
+
+#+LATEX: \lstset{style=shell}
+#+BEGIN_SRC shell
+  userid@hostname:~/exampleRPackage$ tree -a -L 4 packrat
+  packrat
+  |-- init.R
+  |-- lib
+  |   `-- x86_64-pc-linux-gnu
+  |       `-- 3.4.4
+  |           `-- packrat
+  |-- lib-ext
+  |   `-- x86_64-pc-linux-gnu
+  |       `-- 3.4.4
+  |-- lib-R
+  |   `-- x86_64-pc-linux-gnu
+  |       `-- 3.4.4
+  |           |-- base -> /usr/lib/R/library/base
+  |           |-- <some packages omitted>
+  |           `-- utils -> /usr/lib/R/library/utils
+  |-- packrat.lock
+  |-- packrat.opts
+  `-- src
+      `-- packrat
+          `-- packrat_0.5.0.tar.gz
+
+  41 directories, 4 files
+#+END_SRC
+
+
+
+
+*** The =.gitignore= and =.Rbuildignore= files
+
+TODO
 
 #+BEGIN_SRC shell
   userid@hostname:~/exampleRPackage$ cat .gitignore
@@ -327,80 +393,152 @@ on at startup.  We describe what exactly this means in what follows.
 
 
 
+** The Packrat lockfile
 
-
-
-*** Packrat project skeleton
-
-This creates a project skeleton as follows.
-
+TODO: describe this.
 
 #+BEGIN_SRC shell
-userid@hostname:~/projects/myprojdir$ tree -a --charset=ascii
-#+END_SRC
+userid@hostname:~/exampleRPackage$ cat packrat/packrat.lock
+PackratFormat: 1.4
+PackratVersion: 0.5.0
+RVersion: 3.4.4
+Repos: cran=http://cran.us.r-project.org
 
-
-#+BEGIN_SRC shell
-userid@hostname:~/projects/myprojdir$ tree -a -I 'packrat/lib*'
-#+END_SRC
-
-#+BEGIN_SRC shell
-userid@hostname:~/projects/myprojdir$ tree -a -L 4
+Package: packrat
+Source: CRAN
+Version: 0.5.0
+Hash: 498643e765d1442ba7b1160a1df3abf9
 #+END_SRC
 
 
 
 
-*** Packrat directory organization
+* Using Packrat to control package versions
 
-Packrat places the =.Rprofile= file at the top level of you project directory.
-The contents of the file are simply the following:
+** Installing packages
+
+You can use the usual =install.packages= to install a package.  The installed
+package will be installed into =packrat/lib/x86_64-pc-linux-gnu/3.4.4= due to
+the construction of the directories stored by =.libPaths=.
+
+Let's consider a simple example.  We will install an R package =janeaustenr=
+that contains the text of Jane Austen's published books, but more importantly
+for our purposes it doesn't have any dependencies.
 
 #+BEGIN_SRC shell
-#### -- Packrat Autoloader (version 0.5.0) -- ####
-source("packrat/init.R")
-#### -- End Packrat Autoloader -- ####
+  userid@hostname:~/exampleRPackage$ Rscript -e 'install.packages("janeaustenr")'
+  Installing package into
+  '/home/hostname/exampleRPackage/packrat/lib/x86_64-pc-linux-gnu/3.4.4'
+  (as 'lib' is unspecified)
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                   Dload  Upload   Total   Spent    Left  Speed
+  100 1103k  100 1103k    0     0  1872k      0 --:--:-- --:--:-- --:--:-- 1873k
+  * installing *source* package 'janeaustenr' ...
+  ** package 'janeaustenr' successfully unpacked and MD5 sums checked
+  ** R
+  ** data
+  *** moving datasets to lazyload DB
+  ** preparing package for lazy loading
+  ** help
+  *** installing help indices
+  ** building package indices
+  ** testing if installed package can be loaded
+  * DONE (janeaustenr)
+
+  The downloaded source packages are in
+	'/tmp/Rtmp8x1utQ/downloaded_packages'
+
+  userid@hostname:~/exampleRPackage$ tree -a -L 4 packrat
+  packrat
+  |-- init.R
+  |-- lib
+  |   `-- x86_64-pc-linux-gnu
+  |       `-- 3.4.4
+  |           |-- janeaustenr
+  |           `-- packrat
+  |-- lib-ext
+  |   `-- x86_64-pc-linux-gnu
+  |       `-- 3.4.4
+  |-- lib-R
+  |   `-- x86_64-pc-linux-gnu
+  |       `-- 3.4.4
+  |           |-- base -> /usr/lib/R/library/base
+  |           |-- <some packages omitted>
+  |           `-- utils -> /usr/lib/R/library/utils
+  |-- packrat.lock
+  |-- packrat.opts
+  `-- src
+      `-- packrat
+          `-- packrat_0.5.0.tar.gz
+
+  42 directories, 4 files
+
+  userid@hostname:~/exampleRPackage$ cat packrat/packrat.lock
+  PackratFormat: 1.4
+  PackratVersion: 0.5.0
+  RVersion: 3.4.4
+  Repos: CRAN=http://cran.us.r-project.org/
+
+  Package: packrat
+  Source: CRAN
+  Version: 0.5.0
+  Hash: 498643e765d1442ba7b1160a1df3abf9
 #+END_SRC
 
-The intention is that when you work on a project with Packrat, that you start
-your R session in the project directory.  When you do this then R will source
-the =.Rprofile= file as part of the startup process.  A few points to note:
 
-  - This means that you can't use usual recommended practice of invoking the
-    =--vanilla= option when running scripts.  Instead you can use =--no-save
-    --no-restore --no-site-file --no-environ=.
-  - You must start R in the top-level directory: using a subdirectory
-    doesn't have the same effect.  So you can't =cd= into a subdirectory and run
-    a command such as =Rscript myscript= as you often might.
-  - Your user R profile isn't loaded.  You can source it after startup, but note
-    that if you have commands inside of a =.First= function, then you will have
-    to explicitly call it yourself since R won't call it for you.
+** Saving a snapshot of the supporting packages
+
+To include the source package in the directory, call =packrat::snapshot=.
+# Note
+# that this has to be done during the same session that =install.packages= was
+# called (TODO: why?).
+
+#+BEGIN_SRC shell
+  userid@hostname:~/exampleRPackage$ Rscript -e 'packrat::snapshot()'
+
+  Adding these packages to packrat:
+                  _
+      janeaustenr   0.1.5
+
+  Fetching sources for janeaustenr (0.1.5) ... OK (CRAN current)
+  Snapshot written to '/home/hostname/exampleRPackage/packrat/packrat.lock'
+
+  userid@hostname:~/exampleRPackage$ cat packrat/packrat.lock
+  PackratFormat: 1.4
+  PackratVersion: 0.5.0
+  RVersion: 3.4.4
+  Repos: CRAN=http://cran.us.r-project.org/
+
+  Package: janeaustenr
+  Source: CRAN
+  Version: 0.1.5
+  Hash: fa8163788aa6d49b17bf9bf517d5771e
+
+  Package: packrat
+  Source: CRAN
+  Version: 0.5.0
+  Hash: 498643e765d1442ba7b1160a1df3abf9
+#+END_SRC
 
 
 
-** Packrat mode
 
-The Packrat package has a concept of a "Packrat mode" which is either on or off
-at any time.  When it is "on", it is with respect to a given project.  The
-project can be changed.
-
-
-
+* Further details
 
 ** Running R in a directory with Packrat
 
-# The =init.R= file has the following section of code inside a top-level call to
-# =local=.  The =libDir= variable is set in an earlier section of code to the
-# location of the local version of Packrat, so for our example this is TODO.
+The =init.R= file has the following section of code inside a top-level call to
+=local=.  The =libDir= variable is set in an earlier section of code to the
+location of the local version of Packrat, so for our example this is TODO.
 
-# #+BEGIN_SRC R
-# if (suppressWarnings(requireNamespace("packrat", quietly = TRUE, lib.loc = libDir))) {
+#+BEGIN_SRC R
+if (suppressWarnings(requireNamespace("packrat", quietly = TRUE, lib.loc = libDir))) {
 
-#   # some code determining whether to set the variable `print.banner` to `TRUE` or `FALSE`
+  # some code determining whether to set the variable `print.banner` to `TRUE` or `FALSE`
 
-#   return(packrat::on(print.banner = print.banner))
-# }
-# #+END_SRC
+  return(packrat::on(print.banner = print.banner))
+}
+#+END_SRC
 
 The =init.R= file calls =packrat::on=, which in turn calls
 =packrat::setPackratModeOn=.  This function first obtains a value for the
@@ -410,23 +548,6 @@ variable =R_PACKRAT_MODE= is set as a flag to indicate that Packrat mode is on
 by calling =setPackratModeEnvironmentVar=.  After this,
 =packrat::setPackratModeOn= calls =packrat::afterPackratModeOn= and returns.
 
-*** Checking that Packrat mode is on
-
-Use =packrat:::isPackratModeOn=.
-
-
-*** Changing the value of =.libPaths=
-
-Packrat changes the location of the libraries known to =.libPaths= to the
-project directories.  This affects =install.packages= and =library=.  Note that
-even if you set the =R_LIBS= environmental variable before startup or specify it
-in one of the environmental files such as =~/.Renviron=, that the user profile
-code runs after the library search paths have been set, and so overwrites it.
-
-Where exactly?
-  1. =packrat/lib/x86_64-pc-linux-gnu/3.4.4= installed packages
-  2. =packrat/lib-ext/x86_64-pc-linux-gnu/3.4.4= packages that ship with R
-  3. =packrat/lib-R/x86_64-pc-linux-gnu/3.4.4= not sure what this is for!
 
 
 *** Bootstrapping Packrat
@@ -435,13 +556,3 @@ If you obtain a Packrat project from a VCS, then it will typically not include
 the =packrat/lib*/= directories, since these can be derived from other
 information.  Packrat will install them for you if needed (how, by calling the
 .Rprofile function?).
-
-
-*** Installing packages
-
-You can use the usual =install.packages= to install a package.  The installed
-package will be installed into =packrat/lib/x86_64-pc-linux-gnu/3.4.4= due to
-the construction of the directories stored by =.libPaths=.
-
-To include the source package in the directory, call =packrat::snapshot=.  Note
-that this has to be done during the same session that =install.packages= was called.
