@@ -1,4 +1,100 @@
-* Using Packrat for package dependency management in R
+#+TITLE: Using Packrat for package dependency management in R
+
+#+LaTeX_HEADER: \usepackage[margin=1.9cm]{geometry}
+#+LaTeX_HEADER: \usepackage[x11names]{xcolor}
+#+LaTeX_HEADER: \usepackage{amsthm}
+#+LaTeX_HEADER: \usepackage{titlesec}
+#+LaTeX_HEADER: \hypersetup{linktoc = all, colorlinks = true, urlcolor = DodgerBlue4, citecolor = PaleGreen1, linkcolor = black}
+
+#+BEGIN_LaTeX
+  % background color for code environments
+  \definecolor{lightyellow}{RGB}{255,255,224}
+  \definecolor{lightbrown}{RGB}{249,234,197}
+
+  \lstset{%
+    basicstyle=\fontsize{10}{11}\fontfamily{pcr}\selectfont
+  }
+
+  % create a listings environment for Bash
+  \lstdefinestyle{bash}{%
+    language=bash,
+    backgroundcolor=\color{lightyellow},
+    basicstyle=\fontsize{10}{11}\fontfamily{pcr}\selectfont,
+    keywordstyle=\color{Firebrick3},
+    stringstyle=\color{Green4},
+    commentstyle=\color{Purple3},
+    showstringspaces=false,
+    morecomment=[l]{userid@},
+    morecomment=[l]{onyenid@},
+    morecomment=[l]{localid@},
+    morecomment=[l]{sftp> },
+    moredelim=[is][\bfseries]{[*@}{@*]},
+    framesep=4pt,
+    framexleftmargin=3pt,
+    framextopmargin=3pt,
+    framexrightmargin=3pt,
+    framexbottommargin=3pt
+  }
+
+
+  % create an environment for shell sessions
+  \lstdefinestyle{shell}{%
+    backgroundcolor=\color{lightbrown},
+    basicstyle=\fontsize{10.40}{11.40}\fontfamily{pcr}\selectfont,
+    commentstyle=\bfseries,
+    morecomment=[l]{userid@},
+    morecomment=[l]{onyenid@},
+    morecomment=[l]{localid@},
+    morecomment=[l]{sftp> },
+    moredelim=[is][\bfseries]{[*@}{@*]},
+    escapeinside={(*@}{@*)},
+    frame=single,
+    rulesepcolor=\color{gray},
+    rulecolor=\color{lightbrown},
+    framesep=2pt,
+    framexleftmargin=3pt,
+    framextopmargin=3pt,
+    framexrightmargin=3pt,
+    framexbottommargin=3pt
+  }
+
+
+  % create a light blue colored background for R scripts
+  \lstdefinestyle{r-script}{%
+    language=R,
+    backgroundcolor=\color{Blue1!5},
+    basicstyle=\fontsize{10}{11}\fontfamily{pcr}\selectfont,
+    keywordstyle=\color{Firebrick3},
+    commentstyle=\color{DarkOrchid4},
+    stringstyle=\color{Blue1},
+    showstringspaces=false,
+    otherkeywords = {},
+    deletekeywords={action, args, as, char, commandArgs, csv, data, file, getenv,
+      integer, install, installed, interactive, length, library, max, mean, min,
+      nchar, new, numeric, packages, path, print, read, save, set, substr,
+      summary, write, \%/\%, \%_\%}
+  }
+
+  % \theoremstyle{definition}
+  \newtheorem{gotcha}{Gotcha}
+
+  % titlesec documentation:
+  % http://ctan.mackichan.com/macros/latex/contrib/titlesec/titlesec.pdf
+
+  % see pgs 4-5 of documentation for titlespacing syntax.  The command signature
+  % is: \titlespacing*{<command>}{<left>}{<before-sep>}{<after-sep>}[<right-sep>]
+
+  \titlespacing*{\section}{0pt}{10mm plus 1ex minus .2ex}{4mm plus .2ex}
+
+  \titlespacing*{\subsection}{0pt}{10mm plus 1ex minus .2ex}{2mm plus .2ex}
+
+  \titlespacing*{\subsubsection}{0pt}{5mm plus 1ex minus .2ex}{2mm plus .2ex}
+#+END_LaTeX
+
+
+
+
+* Introduction
 
 ** Overview
 
@@ -11,15 +107,15 @@ TODO
 
 Here are the canonical Packrat links.
 
-https://rstudio.github.io/packrat/
-https://cran.r-project.org/package=packrat
+  - https://rstudio.github.io/packrat/
+  - https://cran.r-project.org/package=packrat
 
 
 
 
-* New project packrat initialization
+* New project Packrat initialization
 
-** Creating
+** Creating a skeleton package
 
 Suppose for the time-being that we are starting a new project that we want to
 use Packrat with.  We will later consider adding Packrat to an existing project.
@@ -31,16 +127,19 @@ that it is helpful to initialize git before initializing Packrat, because the
 Packrat will add a =.gitignore= file for us in the directory if it sees that the
 project is version controlled with git.
 
-#+BEGIN_SRC sh
+#+LATEX: \lstset{style=shell}
+#+BEGIN_SRC shell
   userid@hostname:~$ Rscript --vanilla \
-  >                          -e 'usethis::create_package("exampleRPackage")'
-  ✔ Setting active project to '/home/userid/exampleRPackage'
-  ✔ Creating 'R/'
-  ✔ Creating 'man/'
-  ✔ Writing 'DESCRIPTION'
-  ✔ Writing 'NAMESPACE'
+  [*@>                          -e 'usethis::create_package("exampleRPackage")'@*]
+  + Setting active project to '/home/userid/exampleRPackage'
+  + Creating 'R/'
+  + Creating 'man/'
+  + Writing 'DESCRIPTION'
+  + Writing 'NAMESPACE'
+
   dpritch@aspire-a517-51g:~/Downloads$ cd exampleRPackage/
   userid@hostname:~/exampleRPackage$ git init
+
   Initialized empty Git repository in /home/dpritch/Downloads/exampleRPackage/.git/
   userid@hostname:~/exampleRPackage$ tree -a -I .git
   .
@@ -52,26 +151,31 @@ project is version controlled with git.
   2 directories, 2 files
 #+END_SRC
 
+
+
+
+** Initializing Packrat
+
 Next, let's initialize the project with Packrat.  The command to initialize a
-Packrat project is the R command =packrat::init=.  This leads us to a particular
-difficulty that I had when initializing Packrat.
+Packrat project is the R command =packrat::init=, so we run =packrat::init= in a
+clean R session, and then take a look at the newly created files (ignoring files
+more than three levels deep).
 
-*GOTCHA #1*: Packrat tries to unload the non-default libraries (unanswered
-question: why?)  when running =init=.  For me the unloading failed when
-=devtools= was loaded.  Thus, it is advisable to initialize packrat from a clean
-session using e.g. =R --vanilla= to avoid any such headaches.
+\begin{gotcha}
+Packrat tries to unload the non-default libraries (unanswered
+question: why?)  when running \texttt{init}.  For me the unloading failed when
+\texttt{devtools} was loaded.  Thus, it is advisable to initialize packrat from a clean
+session using e.g. \texttt{R --vanilla} to avoid any such difficulties
+\end{gotcha}
 
-So we run =packrat::init= in a clean session then look at the newly created
-files (ignoring files more than three levels deep).
-
-#+BEGIN_SRC sh
+#+BEGIN_SRC shell
   userid@hostname:~/exampleRPackage$ Rscript --vanillla -e 'packrat::init(".")'
   Initializing packrat project in directory:
   - "~/Downloads/exampleRPackage"
 
   Adding these packages to packrat:
-              _
-      packrat   0.5.0
+
+      packrat  0.5.0
 
   Fetching sources for packrat (0.5.0) ... OK (CRAN current)
   Snapshot written to '/home/userid/exampleRPackage/packrat/packrat.lock'
@@ -79,7 +183,7 @@ files (ignoring files more than three levels deep).
           OK (built source)
   Initialization complete!
 
-  userid@hostname:~/exampleRPackage$ tree -a --charset=ascii -I '.git' -L 4
+  userid@hostname:~/exampleRPackage$ tree -a -I '.git' -L 4
   .
   |-- DESCRIPTION
   |-- .gitignore
