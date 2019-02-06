@@ -55,7 +55,7 @@ selected applet relative to the other applets.
 *** Basic utilities
 
 #+BEGIN_SRC shell
-sudo apt-get install htop
+sudo apt install htop
 #+END_SRC
 
 
@@ -77,3 +77,16 @@ sudo add-apt-repository ppa:kelleyk/emacs
 sudo apt-get update
 sudo apt install emacs26
 #+END_SRC
+
+
+
+
+*** Install LaTeX
+
+Install =texlive=.  Note that this also pulls in many =texlive= packages such as
+=texlive-base=, =texlive-binaries=, =texlive-fonts-recommended=,
+=texlive-latex-base=, =texlive-latex-recommended=, and so on.
+
+#+BEGIN_SRC sh
+  sudo apt install texlive texlive-latex-extra texlive-fonts-extra
+#+end_SRC

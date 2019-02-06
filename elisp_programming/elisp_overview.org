@@ -13,10 +13,30 @@ online at the following locations.
 
 
 
+** Introductory sites
+
+  - https://github.com/caiorss/Emacs-Elisp-Programming/blob/master/Elisp_Programming.org
+
+
+
+
 ** Useful sites
 
-  -The essential Elisp libraries:
+  - The essential Elisp libraries:
    http://www.wilfred.me.uk/blog/2013/03/31/essential-elisp-libraries/
+
+
+
+** Adding a new language to Emacs
+
+  - http://www.wilfred.me.uk/blog/2015/03/19/adding-a-new-language-to-emacs/
+
+
+** Unit testing
+
+  - http://rejeep.github.io/emacs/testing/cask/ert-runner/2013/09/26/unit-testing-in-emacs.html
+  - http://rejeep.github.io/emacs/testing/cask/ecukes/2013/10/20/integration-testing-in-emacs.html
+  - http://rejeep.github.io/emacs/cask/ert/ert-runner/ert-async/ecukes/testing/travis/2014/01/09/various-testing-tools-in-emacs.html
 
 
 
