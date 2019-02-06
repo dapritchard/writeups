@@ -235,7 +235,7 @@ top of your project directory raises the following potential issues.
   \lstinline{--vanilla} option when running scripts.  Instead you can use \lstinline{--no-save}
   \lstinline{--no-restore} \lstinline{--no-site-file} \lstinline{--no-environ}.
 
-  Additionally, if the \lstinline{R\_PROFILE\_USER} environmental variable was set or
+  Additionally, if the \lstinline{R_PROFILE_USER} environmental variable was set or
   provided in one of the environmental files such as \lstinline{~/.Renviron}, then the
   project \lstinline{.Rprofile} file will not be loaded at startup and Packrat
   won't work as desired.
@@ -253,7 +253,7 @@ top of your project directory raises the following potential issues.
   the project profile, but beware, now you don't have the option of turning off
   any directives in the user \lstinline{.Rprofile} by using a \lstinline{--vanilla}
   or \lstinline{--no-init} option when reproducibility is important.  Thus it may
-  be advisable to wrap your code in an \lstinline{if (interactive()) \{\dots \}}
+  be advisable to wrap your code in an \lstinline!if (interactive()) {...}!
   statement.  An example project \lstinline{.Rprofile} file is shown below.
 \end{gotcha}
 
@@ -328,12 +328,34 @@ will vary across systems).
   1. =packrat/lib/x86_64-pc-linux-gnu/3.4.4=
   2. =packrat/lib-ext/x86_64-pc-linux-gnu/3.4.4=
   3. =packrat/lib-R/x86_64-pc-linux-gnu/3.4.4=
+
+
+
+
+** A closer look at the =packrat= directory
+
+*** The source and installed package subdirectories
+
 Let's take a closer look at the structure of the project directory tree.  We can
 see that there are three subdirectories in the src_shell[:exports code]{packrat}
 directory that contain installed packages: src_shell[:exports code]{lib},
-src_shell[:exports code]{lib-ext}, and src_shell[:exports code]{lib-R}.
+src_shell[:exports code]{lib-ext}, and src_shell[:exports code]{lib-R}.  We note
+that each subdirectory has a further subdirectory designating the system
+followed by the R version number that the package was built with.
 
-TODO: more here
+The src_shell[:exports code]{lib} directory is where installed package will go.
+Right now it only contains the src_shell[:exports code]{packrat} package.  TODO:
+I'm not sure yet what goes in the src_shell[:exports code]{lib-ext} directory.
+Finally, the src_shell[:exports code]{lib-R} directory contains the standard
+packages that ship with the R distribution (note that most of the packages are
+omitted from the output to save space).  The src_shell[:exports code]{->} in
+src_shell[:exports code]{tree} indicates that they are symbolic links to the
+system-wide packages.
+
+Finally we observe the source package directory src_shell[:exports code]{src}.
+This contains the source code for all of the packages used by the project in
+tarball form.  As we would expect, so far it only contains the
+src_shell[:exports code]{packrat} package.
 
 #+LATEX: \lstset{style=shell}
 #+BEGIN_SRC shell
@@ -351,7 +373,7 @@ TODO: more here
   |   `-- x86_64-pc-linux-gnu
   |       `-- 3.4.4
   |           |-- base -> /usr/lib/R/library/base
-  |           |-- <some packages omitted>
+  |           |-- <some packages omitted from output>
   |           `-- utils -> /usr/lib/R/library/utils
   |-- packrat.lock
   |-- packrat.opts
@@ -367,7 +389,15 @@ TODO: more here
 
 *** The =.gitignore= and =.Rbuildignore= files
 
-TODO
+We can see that by default Packrat adds a line to the src_shell[:exports
+code]{.gitignore} file so as to ignore the installed packages directories.  This
+makes sense in most cases because they vary from system to system and we can
+install them from the source code that is bundled with the project.
+
+We also see that the src_shell[:exports code]{.Rbuildignore} file ignores the
+src_shell[:exports code]{packrat} directory and the project src_shell[:exports
+code]{.Rprofile} file.  This makes sense because it doesn't do us any good to
+include any of package dependencies as part of an installed package.
 
 #+BEGIN_SRC shell
   userid@hostname:~/exampleRPackage$ cat .gitignore
@@ -383,7 +413,14 @@ TODO
 
 ** The Packrat lockfile
 
-TODO: describe this.
+The Packrat lockfile contains information specifying the version numbers for all
+of the package dependencies and for R itself.  We see in the first few lines
+that it specifies the Packrat version, the R version, and any repositories for
+which to find packages.
+
+The remaining blocks of lines in the file (for now just one block) specifies
+information about package dependencies, including the package number and where
+to find the package.
 
 #+BEGIN_SRC shell
 userid@hostname:~/exampleRPackage$ cat packrat/packrat.lock
@@ -405,13 +442,19 @@ Hash: 498643e765d1442ba7b1160a1df3abf9
 
 ** Installing packages
 
-You can use the usual =install.packages= to install a package.  The installed
-package will be installed into =packrat/lib/x86_64-pc-linux-gnu/3.4.4= due to
-the construction of the directories stored by =.libPaths=.
+You can use the usual src_R[:exports code]{install.packages} to install a
+package.  The installed package (and any possible dependencies) will be
+installed into the src_shell[:exports
+code]{packrat/lib/x86_64-pc-linux-gnu/3.4.4} directory due to the construction
+of the directories stored by src_R[:exports code]{.libPaths}.
 
-Let's consider a simple example.  We will install an R package =janeaustenr=
-that contains the text of Jane Austen's published books, but more importantly
-for our purposes it doesn't have any dependencies.
+Let's consider a simple example.  We will install an R package src_R[:exports
+code]{janeaustenr} that contains the text of Jane Austen's published books (and
+more importantly for our purposes it doesn't have any dependencies).
+
+We note in this example we can see that the lockfile hasn't been updated as a
+result of the installation.  It turns out that this requires another step as
+will be described in the following section.
 
 #+BEGIN_SRC shell
   userid@hostname:~/exampleRPackage$ Rscript -e 'install.packages("janeaustenr")'
@@ -476,10 +519,10 @@ for our purposes it doesn't have any dependencies.
 
 ** Saving a snapshot of the supporting packages
 
-To include the source package in the directory, call =packrat::snapshot=.
-# Note
-# that this has to be done during the same session that =install.packages= was
-# called (TODO: why?).
+To include the source tarball for an installed package in the Packrat project,
+we use the R command src_R[:exports code]{packrat::snapshot}.  We can see that
+this has the effect of installing the source tarball to the src_shell[:exports
+code]{src} directory, and adding the package to the lockfile.
 
 #+BEGIN_SRC shell
   userid@hostname:~/exampleRPackage$ Rscript -e 'packrat::snapshot()'
@@ -489,7 +532,7 @@ To include the source package in the directory, call =packrat::snapshot=.
       janeaustenr   0.1.5
 
   Fetching sources for janeaustenr (0.1.5) ... OK (CRAN current)
-  Snapshot written to '/home/hostname/exampleRPackage/packrat/packrat.lock'
+  Snapshot written to '/home/userid/exampleRPackage/packrat/packrat.lock'
 
   userid@hostname:~/exampleRPackage$ cat packrat/packrat.lock
   PackratFormat: 1.4
@@ -506,6 +549,15 @@ To include the source package in the directory, call =packrat::snapshot=.
   Source: CRAN
   Version: 0.5.0
   Hash: 498643e765d1442ba7b1160a1df3abf9
+
+
+  userid@hostname:~/exampleRPackage$ tree -a packrat/src --charset=ascii
+  packrat/src
+  |-- janeaustenr
+  |   `-- janeaustenr_0.1.5.tar.gz
+  `-- packrat
+      `-- packrat_0.5.0.tar.gz
+2 directories, 2 files
 #+END_SRC
 
 
