@@ -1,0 +1,38 @@
+# ------------------------------------------------------------------------------
+# shared Org mode settings
+#
+# note that we expect the following code to be in the init file or elsewhere
+# (see the docstring for `org-latex-listings` for details):
+#
+#     (setq org-latex-listings t)
+#     (require 'ox-latex)
+#     (add-to-list 'org-latex-packages-alist '("" "listings"))
+# ------------------------------------------------------------------------------
+
+#+STARTUP: showeverything
+#+PROPERTY: header-args :tangle yes
+
+#+OPTIONS: date:nil
+#+OPTIONS: toc:nil
+#+OPTIONS: num:nil
+#+OPTIONS: html-postamble:nil
+#+OPTIONS: html-style:nil
+
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../export-setup/github-pandoc.css" />
+#+HTML: <script src="../export-setup/conf-mathjax.js"></script>
+
+#+LaTeX_HEADER: \usepackage[margin=1in]{geometry}
+#+LaTeX_HEADER: \usepackage[x11names]{xcolor}
+#+LaTeX_HEADER: \usepackage{titlesec}
+#+LaTeX_HEADER: \usepackage{xpatch}
+#+LaTeX_HEADER: \usepackage{realboxes}
+
+#+LaTeX_HEADER: \input{../export-setup/conf-hypersetup.tex}
+#+LaTeX_HEADER: \input{../export-setup/conf-sec-titles.tex}
+#+LaTeX_HEADER: \input{../export-setup/conf-listings.tex}
+#+LaTeX_HEADER: \input{../export-setup/redefine-maketitle.tex}
+
+#+BEGIN_EXPORT latex
+% remove excess whitespace after \maketitle command
+\vspace{-6mm}
+#+END_EXPORT
