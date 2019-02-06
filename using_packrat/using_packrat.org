@@ -81,7 +81,7 @@ TODO
 
 ** Useful links
 
-Here are the canonical Packrat links.
+Here are the official Packrat links.
 
   - https://rstudio.github.io/packrat/
   - https://cran.r-project.org/package=packrat
@@ -91,17 +91,21 @@ Here are the canonical Packrat links.
 
 * New project Packrat initialization
 
-** Creating a skeleton package
-
 Suppose for the time-being that we are starting a new project that we want to
 use Packrat with.  We will later consider adding Packrat to an existing project.
 
-To start, we use =usethis= to create a package =exampleRPackage=, and initialize
-git in the new directory.  Then we use the =tree= utility to see the contents of
-the new directory (but ignoring the =.git= directory).  As an aside, we note
-that it is helpful to initialize git before initializing Packrat, because the
-Packrat will add a =.gitignore= file for us in the directory if it sees that the
-project is version controlled with git.
+** Creating a skeleton package
+
+To start, we use src_R[:exports code]{usethis} to create a package
+src_R[:exports code]{exampleRPackage}, and following that we initialize git in
+the new directory.  Then we use the src_shell[:exports code]{tree} utility to
+see the contents of the new directory (but ignoring the src_shell[:exports
+code]{.git} directory).
+
+As an aside, we note that it is helpful to initialize git before initializing
+Packrat, because the Packrat will add a src_shell[:exports code]{.gitignore}
+file for us in the directory if it sees that the project is version controlled
+with git.
 
 #+LATEX: \lstset{style=shell}
 #+BEGIN_SRC shell
@@ -115,7 +119,7 @@ project is version controlled with git.
 
   userid@hostname:~/Downloads$ cd exampleRPackage/
   userid@hostname:~/exampleRPackage$ git init
-  Initialized empty Git repository in /home/dpritch/Downloads/exampleRPackage/.git/
+  Initialized empty Git repository in /home/userid/exampleRPackage/.git/
 
   userid@hostname:~/exampleRPackage$ tree -a -I .git
   .
@@ -133,22 +137,23 @@ project is version controlled with git.
 ** Initializing Packrat
 
 Next, let's initialize the project with Packrat.  The command to initialize a
-Packrat project is the R command =packrat::init=, so we run =packrat::init= in a
-clean R session, and then take a look at the newly created files (ignoring files
-more than three levels deep).
+Packrat project is the R command src_R[:exports code]{packrat::init}, so we run
+src_R[:exports code]{packrat::init} in a clean R session, and then take a look
+at the newly created files (ignoring files more than three levels deep).
 
-We note that if you have a =.git= directory at the top level of your project,
-then =packrat::init= will append the line =packrat/lib*/= to your =.gitignore=
-file (creating the =.gitignore= file if one doesn't yet exist).  If you ran
-=packrat::init= before you initialized your git repository, then you will
-usually want to add this line since the directories that are ignored are
-specific the local system.
+We note that if you have a src_shell[:exports code]{.git} directory at the top
+level of your project, then src_R[:exports code]{packrat::init} will append the
+line src_shell[:exports code]{packrat/lib*/} to your src_R[:exports
+code]{.gitignore} file (creating the src_R[:exports code]{.gitignore} file if
+one doesn't yet exist).  If you ran src_R[:exports code]{packrat::init} before
+you initialized your git repository, then you will usually want to add this line
+since the directories that are ignored are specific the local system.
 
 \begin{gotcha}
   Packrat tries to unload the non-default libraries (unanswered
-  question: why?)  when running \texttt{init}.  For me the unloading failed when
-  \texttt{devtools} was loaded.  Thus, it is advisable to initialize Packrat from
-  a clean session using e.g. \texttt{R --vanilla} to avoid any such difficulties.
+  question: why?)  when running \lstinline{init}.  For me the unloading failed when
+  \lstinline{devtools} was loaded.  Thus, it is advisable to initialize Packrat from
+  a clean session using e.g. \lstinline{R --vanilla} to avoid any such difficulties.
 \end{gotcha}
 
 #+BEGIN_SRC shell
@@ -202,12 +207,13 @@ specific the local system.
 
 *** The contents of =.Rprofile=
 
-In the shell session below we can see that Packrat places the =.Rprofile= file
-at the top level of you project directory with the following contents.  The
-intention is that when you work on a project with Packrat that you start your R
-session in the project directory.  When you do start R in the project directory
-then R as a result R will source the =.Rprofile= file as part of the startup
-process, which in turn sources =packrat/init.R=.
+In the shell session below we can see that Packrat places the src_shell[:exports
+code]{.Rprofile} file at the top level of you project directory with the
+following contents.  The intention is that when you work on a project with
+Packrat that you start your R session in the project directory.  When you do
+start R in the project directory then R as a result R will source the
+src_shell[:exports code]{.Rprofile} file as part of the startup process, which
+in turn sources src_shell[:exports code]{packrat/init.R}.
 
 #+BEGIN_SRC shell
   userid@hostname:~/exampleRPackage$ cat .Rprofile
@@ -221,34 +227,34 @@ process, which in turn sources =packrat/init.R=.
 
 *** =.Rprofile=-related workflow changes.
 
-The fact that Packrat places an =.Rprofile= file at the top of your project
-directory raises the following potential issues.
+The fact that Packrat places an src_shell[:exports code]{.Rprofile} file at the
+top of your project directory raises the following potential issues.
 
 \begin{gotcha}
   This means that you can't use usual recommended practice of invoking the
-  \texttt{--vanilla} option when running scripts.  Instead you can use \texttt{--no-save}
-  \texttt{--no-restore} \texttt{--no-site-file} \texttt{--no-environ}.
+  \lstinline{--vanilla} option when running scripts.  Instead you can use \lstinline{--no-save}
+  \lstinline{--no-restore} \lstinline{--no-site-file} \lstinline{--no-environ}.
 
-  Additionally, if the \texttt{R\_PROFILE\_USER} environmental variable was set or
-  provided in one of the environmental files such as \texttt{~/.Renviron}, then the
-  project \texttt{.Rprofile} file will not be loaded at startup and Packrat
+  Additionally, if the \lstinline{R\_PROFILE\_USER} environmental variable was set or
+  provided in one of the environmental files such as \lstinline{~/.Renviron}, then the
+  project \lstinline{.Rprofile} file will not be loaded at startup and Packrat
   won't work as desired.
 \end{gotcha}
 
 \begin{gotcha}
   You have to start R in the top-level directory: starting R in a subdirectory
-  doesn't have the same effect.  So for example, you can't  \texttt{cd} into a
-  subdirectory and run a command such as \texttt{Rscript myscript} as you typically would.
+  doesn't have the same effect.  So for example, you can't  \lstinline{cd} into a
+  subdirectory and run a command such as \lstinline{Rscript myscript} as you typically would.
 \end{gotcha}
 
 \begin{gotcha}
-  If the project \texttt{.Rprofile} is loaded, then your user R profile isn't
-  loaded.  You can however, explicitly source your user \texttt{.Rprofile} from
+  If the project \lstinline{.Rprofile} is loaded, then your user R profile isn't
+  loaded.  You can however, explicitly source your user \lstinline{.Rprofile} from
   the project profile, but beware, now you don't have the option of turning off
-  any directives in the user \texttt{.Rprofile} by using a \texttt{--vanilla}
-  or \texttt{--no-init} option when reproducibility is important.  Thus it may
-  be advisable to wrap your code in an \texttt{if (interactive()) \{\dots \}}
-  statement.  An example project \texttt{.Rprofile} file is shown below.
+  any directives in the user \lstinline{.Rprofile} by using a \lstinline{--vanilla}
+  or \lstinline{--no-init} option when reproducibility is important.  Thus it may
+  be advisable to wrap your code in an \lstinline{if (interactive()) \{\dots \}}
+  statement.  An example project \lstinline{.Rprofile} file is shown below.
 \end{gotcha}
 
 #+LATEX: \lstset{style=bash}
@@ -274,13 +280,14 @@ directory raises the following potential issues.
 
 ** The =packrat/init.R= file
 
-The =packrat/init.R= script has two purposes.  The first is to bootstrap install
-Packrat if needed, by downloading it if necessary.  A common scenario that you
-might need to install Packrat for is if you copy a project from one system to
-another.
+The src_shell[:exports code]{packrat/init.R} script has two purposes.  The first
+is to bootstrap install Packrat if needed, possibly downloading it if necessary.
+A common scenario that you might need to install Packrat for is if you copy a
+project from one system to another.
 
-The second, and main purpose that =packrat/init.R= fulfills, is to turn Packrat
-on at startup.  We describe what exactly this means in the following section.
+The second, and main purpose that src_shell[:exports code]{packrat/init.R}
+fulfills is to turn Packrat on at startup.  We describe what exactly this means
+in the following section.
 
 
 
@@ -296,20 +303,24 @@ project can be changed, but for now we will consider only a single project.
 
 *** Checking that Packrat mode is on
 
-Use =packrat:::isPackratModeOn= to check if Packrat mode is on.
+You can use the predicate src_shell[:exports code]{packrat:::isPackratModeOn} to
+check if Packrat mode is on.
 
 
 
 
 *** The values of =.libPaths=
 
-Packrat changes the location of the libraries known to =.libPaths= to the
-project directories.  This affects =install.packages= and =library=.  Note that
-even if you set the =R_LIBS= environmental variable before startup or specify it
-in one of the environmental files such as =~/.Renviron=, that the user profile
-code runs after the library search paths have been set, and overwrites it as a
-result.  For the example project created earlier, the values of the data
-structure accessed by =.libPaths= is the following.
+Packrat changes the location of the libraries known to src_R[:exports
+code]{.libPaths} to the project directories.  This affects src_R[:exports
+code]{install.packages} and src_R[:exports code]{library}.  Note that even if
+you set the src_shell[:exports code]{R_LIBS} environmental variable before
+startup or specify it in one of the environmental files such as
+src_shell[:exports code]{~/.Renviron}, that the user profile code runs after the
+library search paths have been set, and overwrites it as a result.  For the
+example project created earlier, the values of the data structure accessed by
+src_R[:exports code]{.libPaths} is the following (and obviously the pathname
+will vary across systems).
 
   # 1. =packrat/lib/x86_64-pc-linux-gnu/3.4.4= installed packages
   # 2. =packrat/lib-ext/x86_64-pc-linux-gnu/3.4.4= packages that ship with R
@@ -318,8 +329,9 @@ structure accessed by =.libPaths= is the following.
   2. =packrat/lib-ext/x86_64-pc-linux-gnu/3.4.4=
   3. =packrat/lib-R/x86_64-pc-linux-gnu/3.4.4=
 Let's take a closer look at the structure of the project directory tree.  We can
-see that there are three subdirectories in the =packrat= directory that contain
-installed packages:  =lib=, =lib-ext=, and =lib-R=.
+see that there are three subdirectories in the src_shell[:exports code]{packrat}
+directory that contain installed packages: src_shell[:exports code]{lib},
+src_shell[:exports code]{lib-ext}, and src_shell[:exports code]{lib-R}.
 
 TODO: more here
 
