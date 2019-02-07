@@ -6,6 +6,7 @@
   % background color for code environments
   \definecolor{lightyellow}{RGB}{255,255,224}
   \definecolor{lightbrown}{RGB}{249,234,197}
+  \definecolor{lightpurple}{RGB}{245,228,244}
 
   % create a listings environment for Bash
   \lstdefinestyle{bash}{%
@@ -58,6 +59,18 @@
       integer, install, installed, interactive, length, library, max, mean, min,
       nchar, new, numeric, packages, path, print, read, save, set, substr,
       summary, write, \%/\%, \%_\%},
+    frame=single,
+    frameround={tttt},
+    rulecolor=\color{gray!50}
+  }
+
+  % create an environment for Terminal sessions
+  \lstdefinestyle{r-console}{%
+    backgroundcolor=\color{lightpurple!60},
+    basicstyle=\fontsize{9.75}{10.75}\fontfamily{pcr}\selectfont,
+    commentstyle=\bfseries,
+    morecomment=[l]{s>},
+    keywords={},
     frame=single,
     frameround={tttt},
     rulecolor=\color{gray!50}
@@ -283,7 +296,8 @@ top of your project directory raises the following potential issues.
 The src_shell[:exports code]{packrat/init.R} script has two purposes.  The first
 is to bootstrap install Packrat if needed, possibly downloading it if necessary.
 A common scenario that you might need to install Packrat for is if you copy a
-project from one system to another.
+project from one system to another system that doesn't have the Packrat package
+installed.
 
 The second, and main purpose that src_shell[:exports code]{packrat/init.R}
 fulfills is to turn Packrat on at startup.  We describe what exactly this means
@@ -528,7 +542,7 @@ code]{src} directory, and adding the package to the lockfile.
   userid@hostname:~/exampleRPackage$ Rscript -e 'packrat::snapshot()'
 
   Adding these packages to packrat:
-                  _
+		  _
       janeaustenr   0.1.5
 
   Fetching sources for janeaustenr (0.1.5) ... OK (CRAN current)
@@ -557,42 +571,192 @@ code]{src} directory, and adding the package to the lockfile.
   |   `-- janeaustenr_0.1.5.tar.gz
   `-- packrat
       `-- packrat_0.5.0.tar.gz
-2 directories, 2 files
+
+  2 directories, 2 files
 #+END_SRC
 
 
 
 
-* Further details
+** Restoring a Packrat project
 
-** Running R in a directory with Packrat
+Suppose now that we obtain a Packrat project without the installed packages, for
+example by cloning a git repository.  Let us emulate this by deleting the
+installed package directories src_shell[:exports code]{lib}, src_shell[:exports
+code]{lib-ext}, and src_shell[:exports code]{lib-R}.
 
-The =init.R= file has the following section of code inside a top-level call to
-=local=.  The =libDir= variable is set in an earlier section of code to the
-location of the local version of Packrat, so for our example this is TODO.
+\begin{gotcha}
+  By default Packrat doesn't bootstrap itself for non-interactive sessions
+  unless you use the TODO option.
+\end{gotcha}
 
+#+BEGIN_SRC shell
+  userid@hostname:~/exampleRPackage$ rm -r packrat/lib*
+  userid@hostname:~/exampleRPackage$ tree -a -I .git
+  .
+  |-- DESCRIPTION
+  |-- .gitignore
+  |-- man
+  |-- NAMESPACE
+  |-- packrat
+  |   |-- init.R
+  |   |-- packrat.lock
+  |   |-- packrat.opts
+  |   `-- src
+  |       |-- janeaustenr
+  |       |   `-- janeaustenr_0.1.5.tar.gz
+  |       `-- packrat
+  |           `-- packrat_0.5.0.tar.gz
+  |-- R
+  |-- .Rbuildignore
+  |-- .Rhistory
+  `-- .Rprofile
+
+  6 directories, 11 files
+
+  userid@hostname:~/exampleRPackage$ R --no-restore --no-save
+  ...
+  Packrat is not installed in the local library --
+      attempting to bootstrap an installation...
+  > Installing packrat into project private library:
+  - 'packrat/lib/x86_64-pc-linux-gnu/3.4.4'
+  ,* installing *source* package 'packrat' ...
+  ,** package 'packrat' successfully unpacked and MD5 sums checked
+  ,** R
+  ,** inst
+  ,** preparing package for lazy loading
+  ,** help
+  ,*** installing help indices
+  ,** building package indices
+  ,** testing if installed package can be loaded
+  ,* DONE (packrat)
+  > Attaching packrat
+  > Restoring library
+  > Packrat bootstrap successfully completed. Entering packrat mode...
+  Packrat mode on. Using library in directory:
+  - "~/exampleRPackage/packrat/lib"
+  > q()
+
+  userid@hostname:~/exampleRPackage$ tree -a -L 4 packrat
+  packrat
+  |-- init.R
+  |-- lib
+  |   `-- x86_64-pc-linux-gnu
+  |       `-- 3.4.4
+  |           `-- packrat
+  |-- lib-ext
+  |   `-- x86_64-pc-linux-gnu
+  |       `-- 3.4.4
+  |-- lib-R
+  |   `-- x86_64-pc-linux-gnu
+  |       `-- 3.4.4
+  |           |-- base -> /usr/lib/R/library/base
+  |           |-- <some packages omitted>
+  |           `-- utils -> /usr/lib/R/library/utils
+  |-- packrat.lock
+  |-- packrat.opts
+  `-- src
+      |-- janeaustenr
+      |   `-- janeaustenr_0.1.5.tar.gz
+      `-- packrat
+	  `-- packrat_0.5.0.tar.gz
+
+  42 directories, 5 files
+#+END_SRC
+
+#+LATEX: \lstset{style=r-console}
 #+BEGIN_SRC R
-if (suppressWarnings(requireNamespace("packrat", quietly = TRUE, lib.loc = libDir))) {
+  > packrat::status()
 
-  # some code determining whether to set the variable `print.banner` to `TRUE` or `FALSE`
+  The following packages are tracked by packrat, but are no longer available in
+  the local library nor present in your code:
+		  _
+      janeaustenr   0.1.5
 
-  return(packrat::on(print.banner = print.banner))
-}
+  You can call packrat::snapshot() to remove these packages from the lockfile, or
+  if you intend to use these packages, use packrat::restore() to restore them to
+  your private library.
+
+  > packrat::snapshot()
+
+  Removing these packages from packrat:
+		  _
+      janeaustenr   0.1.5
+
+  Do you want to continue? [Y/n]: Y
+  Snapshot written to '/home/userid/exampleRPackage/packrat/packrat.lock'
 #+END_SRC
 
-The =init.R= file calls =packrat::on=, which in turn calls
-=packrat::setPackratModeOn=.  This function first obtains a value for the
-varible =state=, which stores information that can be used to return an R
-session to its usual state if Packrat mode is on.  Next, an environmental
-variable =R_PACKRAT_MODE= is set as a flag to indicate that Packrat mode is on
-by calling =setPackratModeEnvironmentVar=.  After this,
-=packrat::setPackratModeOn= calls =packrat::afterPackratModeOn= and returns.
+#+LATEX: \lstset{style=shell}
+#+BEGIN_SRC shell
+  userid@hostname:~/exampleRPackage$ tree -a -L 3 packrat
+  packrat
+  |-- init.R
+  |-- lib
+  |   `-- x86_64-pc-linux-gnu
+  |       `-- 3.4.4
+  |-- lib-ext
+  |   `-- x86_64-pc-linux-gnu
+  |       `-- 3.4.4
+  |-- lib-R
+  |   `-- x86_64-pc-linux-gnu
+  |       `-- 3.4.4
+  |-- packrat.lock
+  |-- packrat.opts
+  `-- src
+      |-- janeaustenr
+      |   `-- janeaustenr_0.1.5.tar.gz
+      `-- packrat
+	  `-- packrat_0.5.0.tar.gz
+
+  12 directories, 5 files
+
+  userid@hostname:~/exampleRPackage$ cat packrat/packrat.lock
+  PackratFormat: 1.4
+  PackratVersion: 0.5.0
+  RVersion: 3.4.4
+  Repos: CRAN=https://cran.rstudio.com/
+
+  Package: packrat
+  Source: CRAN
+  Version: 0.5.0
+  Hash: 498643e765d1442ba7b1160a1df3abf9
+#+END_SRC
 
 
 
-*** Bootstrapping Packrat
 
-If you obtain a Packrat project from a VCS, then it will typically not include
-the =packrat/lib*/= directories, since these can be derived from other
-information.  Packrat will install them for you if needed (how, by calling the
-.Rprofile function?).
+
+# * Further details
+
+# ** Running R in a directory with Packrat
+
+# The =init.R= file has the following section of code inside a top-level call to
+# =local=.  The =libDir= variable is set in an earlier section of code to the
+# location of the local version of Packrat, so for our example this is TODO.
+
+# #+BEGIN_SRC R
+# if (suppressWarnings(requireNamespace("packrat", quietly = TRUE, lib.loc = libDir))) {
+
+#   # some code determining whether to set the variable `print.banner` to `TRUE` or `FALSE`
+
+#   return(packrat::on(print.banner = print.banner))
+# }
+# #+END_SRC
+
+# The =init.R= file calls =packrat::on=, which in turn calls
+# =packrat::setPackratModeOn=.  This function first obtains a value for the
+# varible =state=, which stores information that can be used to return an R
+# session to its usual state if Packrat mode is on.  Next, an environmental
+# variable =R_PACKRAT_MODE= is set as a flag to indicate that Packrat mode is on
+# by calling =setPackratModeEnvironmentVar=.  After this,
+# =packrat::setPackratModeOn= calls =packrat::afterPackratModeOn= and returns.
+
+
+
+# *** Bootstrapping Packrat
+
+# If you obtain a Packrat project from a VCS, then it will typically not include
+# the =packrat/lib*/= directories, since these can be derived from other
+# information.  Packrat will install them for you if needed (how, by calling the
+# .Rprofile function?).
