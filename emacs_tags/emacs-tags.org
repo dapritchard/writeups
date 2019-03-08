@@ -1,0 +1,99 @@
+* Setting up Emacs tags
+
+** Deciding on your setup
+
+*** Useful links
+
+Some useful links are the following:
+  - https://www.emacswiki.org/emacs/BuildTags
+  - https://stackoverflow.com/q/12922526/
+  - https://www.reddit.com/r/emacs/comments/6ecltp/managing_tags/
+  - https://www.emacswiki.org/emacs/GnuGlobal
+
+
+
+
+** Install universal-ctags
+
+According to the EmacsWiki /Build Tags/ page (see previous link),
+universal-ctags is the best tags-generating tool available.
+#+BEGIN_QUOTE
+There are several tools to create a tags file. The two dominant tools are etags
+and ExuberantCtags. Etags comes with Emacs and ExuberantCtags is separate but
+available on most systems. ExuberantCtags is the better choice as it supports
+more languages and is more robust.
+
+ExuberantCtags is no longer being maintained, but a fork, UniversalCtags is
+being actively developed.
+#+END_QUOTE
+
+See https://github.com/universal-ctags/ctags/.  Then clone the project with e.g.
+#+BEGIN_SRC shell
+  git clone https://github.com/universal-ctags/ctags.git
+#+END_SRC
+
+
+Install the software with the following.  See =docs/autotools.rst= for details.
+  - On my system I already have programs =ctags= and =etags= installed.  You can
+    use the e.g. the option =--program-prefix=ex= to add a prefix =ex= which
+    will result in the new version of =ctags= being renamed to =exctags=.
+  - You can use the =--prefix=/where/you/want= option to =configure= to specify
+    the destination directory.  Defaults to =/usr/local=.
+  - On my system I had to install the Debian packages =python-docutils= and
+    =python3-docutils= (did I need both?) for the configure step to work.  You
+    could presumably also use =pip= or some other means to install them as well.
+
+#+BEGIN_SRC shell
+  ./autogen.sh
+  ./configure
+  make
+  make install
+#+END_SRC
+
+
+
+
+** Install GNU Global
+
+*** Download the file
+
+Locations for download are available at
+https://www.gnu.org/software/global/download.html
+
+
+
+
+*** Installation
+
+See the =INSTALL= file for installation instructions.  Also see
+https://www.gnu.org/software/global/manual/global.html#Plug_002din for
+instructions in using universal-ctags as the tags generator (by default GNU
+Global only supports C, C++, Yacc, Java, PHP4 and assembly).
+
+In summary, you can use the following commands (obviously the location of
+universal-ctags may vary):
+
+#+BEGIN_SRC shell
+  ./configure --with-universal-ctags=/usr/local/bin/ctags
+  sudo make install
+
+  export GTAGSCONF=/usr/local/share/gtags/gtags.conf
+  export GTAGSLABEL=new-ctags
+  gtags                         # gtags invokes Universal Ctags internally
+#+END_SRC
+
+
+
+
+** Install ggtags
+
+*** Installation
+
+Use =package-list-packages= or =package-install= to install =ggtags=.  Note that
+in the documentation for =ggtags= at https://github.com/leoliu/ggtags that it
+suggests that you install =pygments= which you can do so (for example) as
+follows.
+
+#+BEGIN_SRC shell
+  sudo pip install pygments
+#+END_SRC
