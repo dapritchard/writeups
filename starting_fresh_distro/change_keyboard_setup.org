@@ -13,3 +13,35 @@ I.e. use the following command:
 #+BEGIN_SRC sh
   setxkbmap -option caps:nocaps
 #+END_SRC
+
+
+Save the following text to e.g. =~/.Xmodmap=.  Can we figure out how to
+incorporate the above command into the script?
+#+BEGIN_SRC fundamental
+  ! explanation points (!) denote comments for xmodmap
+
+  ! see https://wiki.archlinux.org/index.php/xmodmap#Reassigning_modifiers_to_keys_on_your_keyboard
+  ! to understand the following code.  mod1 is the modifier that by default is
+  ! applied when you hit Alt, and shift is the obvious modifier.  Note that
+  ! according to the above link, you have to clear the modifiers before adding
+  ! to them again, or they won't work properly.
+
+  clear shift
+  clear mod1
+  add shift = Shift_L Shift_R Alt_R
+  add mod1 = Alt_L Meta_L
+#+END_SRC
+
+
+In order to run the above script at startup, I saved the following text to
+=~/.config/autostart/xmodmap.desktop=, as described at
+https://askubuntu.com/a/958510/447630.
+#+BEGIN_SRC fundamental
+  [Desktop Entry]
+  Name[en_US]=Xmodmap
+  Comment[en_US]=xmodmap ~/.Xmodmap
+  Exec=/usr/bin/xmodmap .Xmodmap
+  Icon=application-default-icon
+  X-GNOME-Autostart-enabled=true
+  Type=Application
+#+END_SRC
