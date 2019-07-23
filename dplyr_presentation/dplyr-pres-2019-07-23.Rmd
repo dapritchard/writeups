@@ -1,0 +1,447 @@
+---
+title: dplyr Overview
+author: David Pritchard
+date: June 13, 2019
+output: binb::metropolis
+---
+
+
+```{r, echo = FALSE}
+options(tibble.print_max = 6)
+options(tibble.print_min = 6)
+```
+
+
+# Motivation
+
+<!----------------------------------------------------------------------------->
+
+## Data frame abstract data type
+
+Programming languages used for processing data have typically developed the
+notion of what is often called a _data frame_
+\vspace{2mm}
+
+\begin{definition}[data frame]
+\vspace{0mm}
+An abstract data type that represents data as a rectangular collection of
+fields (or variable) and entries (or observations)
+\end{definition}
+
+\vspace{-2mm}
+* A field is an ordered collection of homogeneous data typically with some
+  semantic meaning.  E.g. age, weight, ...
+* An entry is an ordered collection of heterogeneous data that are somehow
+  associated.  E.g. a set of measurements obtained from performing a scientific
+  experiment.
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## Data frame abstract data type (cont.)
+
+By convention, the rectangular grid of entries and fields is usually
+arranged with entries as rows and fields as columns
+
+* The $(i, j)$-th element of a data frame refers to the $i$-th entry and $j$-th
+  field
+* By virtue of this arrangement, the terms _row_ and _column_ are often used
+  synonymously for entry and field
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## Data frame abstract data type (cont.)
+
+Data frames take a central role in the R programming language
+
+* They are the de facto data structure used by statistical modeling routines
+* Are often a natural container for data storage / processing
+
+Because so many programming tasks in R tend to involve manipulating data frames,
+naturally we would like to utilize available high-level libraries
+
+* dplyr and other data frame libraries can be a major productivity booster
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## Data frame implementation in R
+
+In R, data frames are implemented as part of the `base` package (the `base`
+package is part of a collection of packages that is bundled with R -- what is
+often called the standard library in other languages).
+
+A data frame is an S3 object with class `data.frame` (S3 is one of R's object
+oriented programming systems)
+
+* It takes the structure of a list whose elements are all vectors of the same
+  length
+* Note that since a list is a type of vector, you can include nearly any type of
+  object as part of a data frame
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## Commonly used data frame libraries in R
+
+The two most popular data frame manipulation libraries in R are dplyr and
+data.table.
+
+dplyr:
+
+* Written by Hadley Wickham and others
+* Part of the so-called tidyverse, a collection of packages that "share an
+  underlying design philosophy, grammar, and data structures."
+
+data.table:
+
+* Written by Matt Dowle and others
+* Emphasis on efficiency, can have a fairly dense syntax
+
+In this talk we focus only on dplyr
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+# dplyr Basics
+
+## Background
+
+dplyr is the successor to the plyr package and was first released in January
+2014.
+
+plyr, authored by Hadley Wickham, is itself noteworthy for being the
+implementation of the well-known split-apply-combine pattern described by
+Wickham in the _The Split-Apply-Combine Strategy for Data Analysis_ (2011),
+Journal for Statistical Software.
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## Supported data types
+
+dplyr is designed from the ground up to support multiple data formats
+
+* plays nicely with `tibble`s, a data structure that subclasses `data.frame`s
+* can perform queries on data stored in databases through the sister package
+  `dbplyr` and the appropriate database-specific backend
+  * compiles to SQL
+  * supports MySQL, MariaDB, Postgres, Redshift, SQLite, Google BigQuery, and
+    others
+* can create new backends simply by registering the appropriate methods
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## Key functions 
+
+Key functions (many functions have multiple variants):
+
+* `filter`: remove rows
+* `arrange`: sort rows
+* `select`: remove / rename / reorder columns
+* `mutate`: create new columns
+* `summarize`: map (each groups of) rows to a single row
+* `group_by`: define a grouping structure on the rows
+
+Join operations:
+
+* `inner_join`, `left_join`, `right_join`, `full_join`, `bind_rows`, `bind_cols`
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## Key functions (cont.)
+
+Set operations:
+
+* `intersect`, `union`, `setdiff`, `setequal`
+
+Conditionals:
+
+* `if_else`, `case_when`
+
+and many, many more...
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## Design philosophy
+
+The dplyr functions are typically designed with the following principles:
+
+* Small, composable functions
+* The first formal argument is used to specify the data
+* Heavy use of so-called non-standard evaluation (NSE) for various purposes
+  * Makes use of R's lazy evaluation behavior and metaprogramming capabilities
+  * Allows for a (subjectively) cleaner syntax
+  * Mechanism used for compilation to alternative data sources
+  * Not a free lunch: requires a _much_ more complicated mental model
+
+We will elaborate more on these points as we progress
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+# Fundamental dplyr use
+
+## The mtcars dataset
+
+We will work with this example dataset in the upcoming slides
+\small
+```{r}
+library(dplyr); library(tibble)
+(mtcars2 <- as_tibble(rownames_to_column(
+     mtcars[, c("mpg", "cyl", "hp", "wt")], "car"
+ )))
+```
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## filter use
+
+We can filter the rows in the data by using the `filter` function.  The
+arguments after the data are conditions that are logically ANDed together.
+
+\small
+```{r}
+filter(mtcars2, cyl >= 6, wt < 3)
+```
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## filter use (cont.)
+
+Compare the syntax from the previous `filter` statement to that of an
+equivalent statement using the `[]` operator.
+
+* The filter statement arguably has a cleaner syntax
+* Achieved by allowing the user to refer to column names through an unquoted
+  symbol
+* This is an example of NSE.  Under normal evaluation rules, R would look for
+  variables named `cyl` and `wt` in the lexical scope of the current
+  environment.
+        
+\small
+```{r, eval = FALSE}
+filter(mtcars2, cyl >= 6, wt < 3)
+mtcars2[(mtcars2$cyl >= 6) & (mtcars2$wt < 3), ]
+```
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## arrange use
+
+To sort a data frame on one or more of the columns, simply provide the unquoted
+column names to the `arrange` function
+
+* compare to the equivalent `mtcars2[order(mtcars2$car), ]`
+
+\small
+```{r}
+arrange(mtcars2, car)
+```
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## select use
+
+The `select` function allows you to remove, rename, and/or reorder columns
+
+* also see `rename` to rename a few of the columns but still keep the remaining
+  columns in the dataset
+
+\small
+```{r}
+select(mtcars2, weight = wt, car_type = car)
+```
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## select use (cont.)
+
+dplyr includes a number of helper functions for `select`
+\vspace{-2mm}
+
+* note that the helper functions are evaluated in the context of the data frame
+  (see `?select_helpers` for documentation)
+
+\small
+```{r}
+select(mtcars2, car, matches("^..$"))
+```
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## mutate use
+
+Create new (or overwrite the values of existing) columns with `mutate`
+
+\small
+```{r}
+mutate(mtcars2, efficient = (mpg > 20))
+```
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## summarize
+
+Creates a single row from many rows (mostly useful in conjunction with
+`group_by` as we will see later)
+
+* The function `summarise` is provided as an alias for `summarize` for our
+  British-English speaking friends
+
+\small
+```{r}
+summarize(mtcars2, mean_mpg = mean(mpg), mean_hp = mean(hp))
+```
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## group_by use
+
+`group_by` decorates the data with a set of indices corresponding to different
+groups
+
+\footnotesize
+```{r}
+str(group_by(mtcars2, cyl))
+```
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## group_by use (cont.)
+
+dplyr functions that operate on the rows will operate on each of the groups of a
+grouped data frame one group at-a-time (this is the split-apply-combine pattern)
+
+\small
+```{r}
+grouped_mtcars2 <- group_by(mtcars2, cyl)
+summarize(grouped_mtcars2, mean_mpg = mean(mpg), mean_hp = mean(hp))
+```
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+# A more involved example
+
+## Create a toy dataset
+
+Creating a fictitious dataset in the future
+
+\small
+```{r}
+events <- tibble(
+  id = c("a", "a", "a", "b", "b", "b", "b"),
+  date = as.Date(22373:22379, origin = "1970-01-01"),
+  value = c(21, 18, 12, 34, 32, 29, 26),
+  is_index = c(TRUE, FALSE, FALSE,
+               FALSE, TRUE, FALSE, FALSE),
+  is_event = c(TRUE, FALSE, TRUE,
+               FALSE, TRUE, TRUE, TRUE)
+)
+events <- group_by(events, id)
+```
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## Print the dataset to the R console
+
+\small
+```{r}
+print(events, n = Inf)
+```
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## Using list-columns
+
+It is common to map the data to a one-entry-per-key dataset.  We can use lists
+to collect multiple values into a single entry.
+
+\small
+```{r}
+subj_means <- summarize(
+  events,
+  event_dates = list(date),
+  mean_val = mean(value)
+)
+subj_means
+```
+
+
+
+
+<!----------------------------------------------------------------------------->
+
+## Continued data processing
+
+By storing your values in a list you can perform multiple steps of data
+processing on the one-entry-per-key dataset and still keep the data around.
+
+\small
+```{r}
+subj_at_risk <- filter(
+  subj_means,
+  mean_val < 20
+)
+subj_at_risk
+```
