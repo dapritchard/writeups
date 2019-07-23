@@ -29,10 +29,12 @@
 
 
   % create an environment for shell sessions
-  \lstdefinestyle{shell}{%
+  \lstdefinestyle{command-line}{%
     backgroundcolor=\color{lightbrown},
     basicstyle=\fontsize{9.75}{10.75}\fontfamily{pcr}\selectfont,
     commentstyle=\bfseries,
+    keywordstyle=\color{black},
+    stringstyle=\color{black},
     morecomment=[l]{userid@},
     morecomment=[l]{onyenid@},
     morecomment=[l]{localid@},
@@ -111,17 +113,18 @@ use Packrat with.  We will later consider adding Packrat to an existing project.
 
 To start, we use src_R[:exports code]{usethis} to create a package
 src_R[:exports code]{exampleRPackage}, and following that we initialize git in
-the new directory.  Then we use the src_shell[:exports code]{tree} utility to
-see the contents of the new directory (but ignoring the src_shell[:exports
+the new directory.  Then we use the src_shell-script[:exports code]{tree} utility to
+see the contents of the new directory (but ignoring the src_shell-script[:exports
 code]{.git} directory).
 
 As an aside, we note that it is helpful to initialize git before initializing
-Packrat, because the Packrat will add a src_shell[:exports code]{.gitignore}
+Packrat, because the Packrat will add a src_shell-script[:exports code]{.gitignore}
 file for us in the directory if it sees that the project is version controlled
 with git.
 
-#+LATEX: \lstset{style=shell}
-#+BEGIN_SRC shell
+#+LATEX: \lstset{style=command-line}
+#+ATTR_LATEX: :options language={},keywords={},morecomment=[l]{userid@},moredelim=[is][\bfseries]{[*@}{@*]}
+#+BEGIN_SRC shell-script
   userid@hostname:~$ Rscript --vanilla \
   [*@>                          -e 'usethis::create_package("exampleRPackage")'@*]
   + Setting active project to '/home/userid/exampleRPackage'
@@ -130,7 +133,7 @@ with git.
   + Writing 'DESCRIPTION'
   + Writing 'NAMESPACE'
 
-  userid@hostname:~/Downloads$ cd exampleRPackage/
+  userid@hostname:~$ cd exampleRPackage/
   userid@hostname:~/exampleRPackage$ git init
   Initialized empty Git repository in /home/userid/exampleRPackage/.git/
 
@@ -154,9 +157,9 @@ Packrat project is the R command src_R[:exports code]{packrat::init}, so we run
 src_R[:exports code]{packrat::init} in a clean R session, and then take a look
 at the newly created files (ignoring files more than three levels deep).
 
-We note that if you have a src_shell[:exports code]{.git} directory at the top
+We note that if you have a src_shell-script[:exports code]{.git} directory at the top
 level of your project, then src_R[:exports code]{packrat::init} will append the
-line src_shell[:exports code]{packrat/lib*/} to your src_R[:exports
+line src_shell-script[:exports code]{packrat/lib*/} to your src_R[:exports
 code]{.gitignore} file (creating the src_R[:exports code]{.gitignore} file if
 one doesn't yet exist).  If you ran src_R[:exports code]{packrat::init} before
 you initialized your git repository, then you will usually want to add this line
@@ -169,10 +172,11 @@ since the directories that are ignored are specific the local system.
   a clean session using e.g. \lstinline{R --vanilla} to avoid any such difficulties.
 \end{gotcha}
 
-#+BEGIN_SRC shell
+#+ATTR_LATEX: :options language={},keywords={},morecomment=[l]{userid@},moredelim=[is][\bfseries]{[*@}{@*]}
+#+BEGIN_SRC shell-script
   userid@hostname:~/exampleRPackage$ Rscript --vanillla -e 'packrat::init(".")'
   Initializing packrat project in directory:
-  - "~/Downloads/exampleRPackage"
+  - "~/exampleRPackage"
 
   Adding these packages to packrat:
               _
@@ -184,7 +188,7 @@ since the directories that are ignored are specific the local system.
           OK (built source)
   Initialization complete!
 
-  userid@hostname:~/exampleRPackage$ tree -a -I '.git' -L 4
+  userid@hostname:~/exampleRPackage$ tree -a -I .git -L 4
   .
   |-- DESCRIPTION
   |-- .gitignore
@@ -220,15 +224,16 @@ since the directories that are ignored are specific the local system.
 
 *** The contents of =.Rprofile=
 
-In the shell session below we can see that Packrat places the src_shell[:exports
+In the shell session below we can see that Packrat places the src_shell-script[:exports
 code]{.Rprofile} file at the top level of you project directory with the
 following contents.  The intention is that when you work on a project with
 Packrat that you start your R session in the project directory.  When you do
 start R in the project directory then R as a result R will source the
-src_shell[:exports code]{.Rprofile} file as part of the startup process, which
-in turn sources src_shell[:exports code]{packrat/init.R}.
+src_shell-script[:exports code]{.Rprofile} file as part of the startup process, which
+in turn sources src_shell-script[:exports code]{packrat/init.R}.
 
-#+BEGIN_SRC shell
+#+ATTR_LATEX: :options language={},keywords={},morecomment=[l]{userid@},moredelim=[is][\bfseries]{[*@}{@*]}
+#+BEGIN_SRC shell-script
   userid@hostname:~/exampleRPackage$ cat .Rprofile
   #### -- Packrat Autoloader (version 0.5.0) -- ####
   source("packrat/init.R")
@@ -240,8 +245,14 @@ in turn sources src_shell[:exports code]{packrat/init.R}.
 
 *** =.Rprofile=-related workflow changes.
 
-The fact that Packrat places an src_shell[:exports code]{.Rprofile} file at the
+The fact that Packrat places an src_shell-script[:exports code]{.Rprofile} file at the
 top of your project directory raises the following potential issues.
+
+\begin{gotcha}
+  You have to start R in the top-level directory: starting R in a subdirectory
+  doesn't have the same effect.  So for example, you can't  \lstinline{cd} into a
+  subdirectory and run a command such as \lstinline{Rscript myscript} as you typically would.
+\end{gotcha}
 
 \begin{gotcha}
   This means that you can't use usual recommended practice of invoking the
@@ -255,12 +266,6 @@ top of your project directory raises the following potential issues.
 \end{gotcha}
 
 \begin{gotcha}
-  You have to start R in the top-level directory: starting R in a subdirectory
-  doesn't have the same effect.  So for example, you can't  \lstinline{cd} into a
-  subdirectory and run a command such as \lstinline{Rscript myscript} as you typically would.
-\end{gotcha}
-
-\begin{gotcha}
   If the project \lstinline{.Rprofile} is loaded, then your user R profile isn't
   loaded.  You can however, explicitly source your user \lstinline{.Rprofile} from
   the project profile, but beware, now you don't have the option of turning off
@@ -270,8 +275,8 @@ top of your project directory raises the following potential issues.
   statement.  An example project \lstinline{.Rprofile} file is shown below.
 \end{gotcha}
 
-#+LATEX: \lstset{style=bash}
-#+BEGIN_SRC sh
+#+LATEX: \lstset{style=r-script}
+#+BEGIN_SRC shell-script
   #### -- Packrat Autoloader (version 0.5.0) -- ####
   source("packrat/init.R")
   #### -- End Packrat Autoloader -- ####
@@ -293,13 +298,13 @@ top of your project directory raises the following potential issues.
 
 ** The =packrat/init.R= file
 
-The src_shell[:exports code]{packrat/init.R} script has two purposes.  The first
+The src_shell-script[:exports code]{packrat/init.R} script has two purposes.  The first
 is to bootstrap install Packrat if needed, possibly downloading it if necessary.
 A common scenario that you might need to install Packrat for is if you copy a
 project from one system to another system that doesn't have the Packrat package
 installed.
 
-The second, and main purpose that src_shell[:exports code]{packrat/init.R}
+The second, and main purpose that src_shell-script[:exports code]{packrat/init.R}
 fulfills is to turn Packrat on at startup.  We describe what exactly this means
 in the following section.
 
@@ -317,7 +322,7 @@ project can be changed, but for now we will consider only a single project.
 
 *** Checking that Packrat mode is on
 
-You can use the predicate src_shell[:exports code]{packrat:::isPackratModeOn} to
+You can use the predicate src_shell-script[:exports code]{packrat:::isPackratModeOn} to
 check if Packrat mode is on.
 
 
@@ -328,9 +333,9 @@ check if Packrat mode is on.
 Packrat changes the location of the libraries known to src_R[:exports
 code]{.libPaths} to the project directories.  This affects src_R[:exports
 code]{install.packages} and src_R[:exports code]{library}.  Note that even if
-you set the src_shell[:exports code]{R_LIBS} environmental variable before
+you set the src_shell-script[:exports code]{R_LIBS} environmental variable before
 startup or specify it in one of the environmental files such as
-src_shell[:exports code]{~/.Renviron}, that the user profile code runs after the
+src_shell-script[:exports code]{~/.Renviron}, that the user profile code runs after the
 library search paths have been set, and overwrites it as a result.  For the
 example project created earlier, the values of the data structure accessed by
 src_R[:exports code]{.libPaths} is the following (and obviously the pathname
@@ -339,9 +344,18 @@ will vary across systems).
   # 1. =packrat/lib/x86_64-pc-linux-gnu/3.4.4= installed packages
   # 2. =packrat/lib-ext/x86_64-pc-linux-gnu/3.4.4= packages that ship with R
   # 3. =packrat/lib-R/x86_64-pc-linux-gnu/3.4.4= TODO: not sure what this is for!
-  1. =packrat/lib/x86_64-pc-linux-gnu/3.4.4=
-  2. =packrat/lib-ext/x86_64-pc-linux-gnu/3.4.4=
-  3. =packrat/lib-R/x86_64-pc-linux-gnu/3.4.4=
+  # 1. =packrat/lib/x86_64-pc-linux-gnu/3.4.4=
+  # 2. =packrat/lib-ext/x86_64-pc-linux-gnu/3.4.4=
+  # 3. =packrat/lib-R/x86_64-pc-linux-gnu/3.4.4=
+
+#+LATEX: \lstset{style=r-console}
+#+ATTR_LATEX: :options language={},keywords={},morecomment=[l]{> },moredelim=[is][\bfseries]{[*@}{@*]}
+#+BEGIN_SRC R
+  > .libPaths()
+  [1] packrat/lib/x86_64-pc-linux-gnu/3.4.4
+  [2] packrat/lib-ext/x86_64-pc-linux-gnu/3.4.4
+  [3] packrat/lib-R/x86_64-pc-linux-gnu/3.4.4
+#+END_SRC
 
 
 
@@ -351,28 +365,29 @@ will vary across systems).
 *** The source and installed package subdirectories
 
 Let's take a closer look at the structure of the project directory tree.  We can
-see that there are three subdirectories in the src_shell[:exports code]{packrat}
-directory that contain installed packages: src_shell[:exports code]{lib},
-src_shell[:exports code]{lib-ext}, and src_shell[:exports code]{lib-R}.  We note
+see that there are three subdirectories in the src_shell-script[:exports code]{packrat}
+directory that contain installed packages: src_shell-script[:exports code]{lib},
+src_shell-script[:exports code]{lib-ext}, and src_shell-script[:exports code]{lib-R}.  We note
 that each subdirectory has a further subdirectory designating the system
 followed by the R version number that the package was built with.
 
-The src_shell[:exports code]{lib} directory is where installed package will go.
-Right now it only contains the src_shell[:exports code]{packrat} package.  TODO:
-I'm not sure yet what goes in the src_shell[:exports code]{lib-ext} directory.
-Finally, the src_shell[:exports code]{lib-R} directory contains the standard
+The src_shell-script[:exports code]{lib} directory is where installed package will go.
+Right now it only contains the src_shell-script[:exports code]{packrat} package.  TODO:
+I'm not sure yet what goes in the src_shell-script[:exports code]{lib-ext} directory.
+Finally, the src_shell-script[:exports code]{lib-R} directory contains the standard
 packages that ship with the R distribution (note that most of the packages are
-omitted from the output to save space).  The src_shell[:exports code]{->} in
-src_shell[:exports code]{tree} indicates that they are symbolic links to the
+omitted from the output to save space).  The src_shell-script[:exports code]{->} in
+src_shell-script[:exports code]{tree} indicates that they are symbolic links to the
 system-wide packages.
 
-Finally we observe the source package directory src_shell[:exports code]{src}.
+Finally we observe the source package directory src_shell-script[:exports code]{src}.
 This contains the source code for all of the packages used by the project in
 tarball form.  As we would expect, so far it only contains the
-src_shell[:exports code]{packrat} package.
+src_shell-script[:exports code]{packrat} package.
 
-#+LATEX: \lstset{style=shell}
-#+BEGIN_SRC shell
+#+LATEX: \lstset{style=command-line}
+#+ATTR_LATEX: :options language={},keywords={},morecomment=[l]{userid@},moredelim=[is][\bfseries]{[*@}{@*]}
+#+BEGIN_SRC shell-script
   userid@hostname:~/exampleRPackage$ tree -a -L 4 packrat
   packrat
   |-- init.R
@@ -403,17 +418,18 @@ src_shell[:exports code]{packrat} package.
 
 *** The =.gitignore= and =.Rbuildignore= files
 
-We can see that by default Packrat adds a line to the src_shell[:exports
+We can see that by default Packrat adds a line to the src_shell-script[:exports
 code]{.gitignore} file so as to ignore the installed packages directories.  This
 makes sense in most cases because they vary from system to system and we can
 install them from the source code that is bundled with the project.
 
-We also see that the src_shell[:exports code]{.Rbuildignore} file ignores the
-src_shell[:exports code]{packrat} directory and the project src_shell[:exports
+We also see that the src_shell-script[:exports code]{.Rbuildignore} file ignores the
+src_shell-script[:exports code]{packrat} directory and the project src_shell-script[:exports
 code]{.Rprofile} file.  This makes sense because it doesn't do us any good to
 include any of package dependencies as part of an installed package.
 
-#+BEGIN_SRC shell
+#+ATTR_LATEX: :options language={},keywords={},morecomment=[l]{userid@},moredelim=[is][\bfseries]{[*@}{@*]}
+#+BEGIN_SRC shell-script
   userid@hostname:~/exampleRPackage$ cat .gitignore
   packrat/lib*/
 
@@ -436,7 +452,8 @@ The remaining blocks of lines in the file (for now just one block) specifies
 information about package dependencies, including the package number and where
 to find the package.
 
-#+BEGIN_SRC shell
+#+ATTR_LATEX: :options language={},keywords={},morecomment=[l]{userid@},moredelim=[is][\bfseries]{[*@}{@*]}
+#+BEGIN_SRC shell-script
 userid@hostname:~/exampleRPackage$ cat packrat/packrat.lock
 PackratFormat: 1.4
 PackratVersion: 0.5.0
@@ -458,7 +475,7 @@ Hash: 498643e765d1442ba7b1160a1df3abf9
 
 You can use the usual src_R[:exports code]{install.packages} to install a
 package.  The installed package (and any possible dependencies) will be
-installed into the src_shell[:exports
+installed into the src_shell-script[:exports
 code]{packrat/lib/x86_64-pc-linux-gnu/3.4.4} directory due to the construction
 of the directories stored by src_R[:exports code]{.libPaths}.
 
@@ -470,7 +487,8 @@ We note in this example we can see that the lockfile hasn't been updated as a
 result of the installation.  It turns out that this requires another step as
 will be described in the following section.
 
-#+BEGIN_SRC shell
+#+ATTR_LATEX: :options language={},keywords={},morecomment=[l]{userid@},moredelim=[is][\bfseries]{[*@}{@*]}
+#+BEGIN_SRC shell-script
   userid@hostname:~/exampleRPackage$ Rscript -e 'install.packages("janeaustenr")'
   Installing package into
   '/home/hostname/exampleRPackage/packrat/lib/x86_64-pc-linux-gnu/3.4.4'
@@ -535,10 +553,11 @@ will be described in the following section.
 
 To include the source tarball for an installed package in the Packrat project,
 we use the R command src_R[:exports code]{packrat::snapshot}.  We can see that
-this has the effect of installing the source tarball to the src_shell[:exports
+this has the effect of installing the source tarball to the src_shell-script[:exports
 code]{src} directory, and adding the package to the lockfile.
 
-#+BEGIN_SRC shell
+#+ATTR_LATEX: :options language={},keywords={},morecomment=[l]{userid@},moredelim=[is][\bfseries]{[*@}{@*]}
+#+BEGIN_SRC shell-script
   userid@hostname:~/exampleRPackage$ Rscript -e 'packrat::snapshot()'
 
   Adding these packages to packrat:
@@ -565,7 +584,7 @@ code]{src} directory, and adding the package to the lockfile.
   Hash: 498643e765d1442ba7b1160a1df3abf9
 
 
-  userid@hostname:~/exampleRPackage$ tree -a packrat/src --charset=ascii
+  userid@hostname:~/exampleRPackage$ tree -a packrat/src
   packrat/src
   |-- janeaustenr
   |   `-- janeaustenr_0.1.5.tar.gz
@@ -582,15 +601,16 @@ code]{src} directory, and adding the package to the lockfile.
 
 Suppose now that we obtain a Packrat project without the installed packages, for
 example by cloning a git repository.  Let us emulate this by deleting the
-installed package directories src_shell[:exports code]{lib}, src_shell[:exports
-code]{lib-ext}, and src_shell[:exports code]{lib-R}.
+installed package directories src_shell-script[:exports code]{lib}, src_shell-script[:exports
+code]{lib-ext}, and src_shell-script[:exports code]{lib-R}.
 
 \begin{gotcha}
   By default Packrat doesn't bootstrap itself for non-interactive sessions
   unless you use the TODO option.
 \end{gotcha}
 
-#+BEGIN_SRC shell
+#+ATTR_LATEX: :options language={},keywords={},morecomment=[l]{userid@},moredelim=[is][\bfseries]{[*@}{@*]}
+#+BEGIN_SRC shell-script
   userid@hostname:~/exampleRPackage$ rm -r packrat/lib*
   userid@hostname:~/exampleRPackage$ tree -a -I .git
   .
@@ -665,6 +685,7 @@ code]{lib-ext}, and src_shell[:exports code]{lib-R}.
 #+END_SRC
 
 #+LATEX: \lstset{style=r-console}
+#+ATTR_LATEX: :options language={},keywords={},morecomment=[l]{> },moredelim=[is][\bfseries]{[*@}{@*]}
 #+BEGIN_SRC R
   > packrat::status()
 
@@ -687,8 +708,9 @@ code]{lib-ext}, and src_shell[:exports code]{lib-R}.
   Snapshot written to '/home/userid/exampleRPackage/packrat/packrat.lock'
 #+END_SRC
 
-#+LATEX: \lstset{style=shell}
-#+BEGIN_SRC shell
+#+LATEX: \lstset{style=command-line}
+#+ATTR_LATEX: :options language={},keywords={},morecomment=[l]{userid@},moredelim=[is][\bfseries]{[*@}{@*]}
+#+BEGIN_SRC shell-script
   userid@hostname:~/exampleRPackage$ tree -a -L 3 packrat
   packrat
   |-- init.R
