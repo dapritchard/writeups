@@ -124,6 +124,7 @@ Finally, download R with the following command:
   sudo apt install python-pip python3-pip
   sudo -H pip2 install --upgrade pip
   sudo -H pip3 install --upgrade pip
+  export PATH=~/.local/bin:$PATH
 #+END_SRC
 
 Install =elpy= dependencies

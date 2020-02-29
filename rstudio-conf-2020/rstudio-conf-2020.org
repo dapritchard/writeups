@@ -1,0 +1,111 @@
+* RStudio conference 2020 highlights
+
+Links to some of the talks and slides: https://github.com/EmilHvitfeldt/RStudioConf2020Slides
+
+** JJ Allaire talk
+
+Opening talk in the conference.
+  * Lots of emphasis in opening remarks on RStudio's dual support of R + Python.
+  * Remaining discussion was on RStudio's role in the R community.
+    * "The lifetime of propriety software products are bound up in the fortunes
+      of the company."
+    * Alternative model: "Free as in freedom, not as in beer."
+    * "If you use propriety software then you probably can't reproduce your own
+      code in 5 years."
+    * Propriety software vendors centralize decisions about what features and
+      methodologies are supported.
+    * "Don't let your research be tied to the fate of a software vendor."
+  * Sustainability of open-source projects.
+    * Half of software development is "doing the boring stuff."
+    * Increasingly high user-to-contributor ratio.
+    * 152 people currently supported in various capacities by RStudio.
+  * Are corporations good stewards for open-source projects?
+    * They are not.  By law, corporations are beholden solely to the interests
+      of their shareholders, and are not legally allowed to consider the
+      interests of their other stakeholders such as employees and customers.
+    * For this reason, RStudio is transitions into a public-benefit corporation
+      (PBC).  Public-benefit corporations are a specific type of corporation
+      that allow for public benefit to be a charter purpose in addition to the
+      traditional corporate goal of maximizing profit for shareholders.
+
+** State of the tidyverse (Hadley Wickham)
+
+Discussion about upcoming areas of focus for the RStudio team.
+  * 2019 highlights
+    * =citation("tidyvers")=
+    * curly-curly
+    * vctrs
+    * vroom (eventually to be the backend for readr)
+    * tidymodels
+  * 2020 roadmap
+    * dplyr 1.0.0
+    * Heavy focus on tidymodels development.
+    * Less need for purrr for data science tasks.
+    * googlesheets4
+  * tidyeval postmortum
+    * "We messed up tidyeval."
+    * The problem was harder than they expected.
+    * Too excited about the theory.
+    * Too much vocabulary.
+    * Need better ways to introduce new concepts to the community and receive
+      feedback without subjecting everybody to it.
+
+** Websites using R as a backend
+
+Different techniques.
+  * Shiny applications
+    * https://speakerdeck.com/jcheng5/styling-shiny
+    * https://speakerdeck.com/colinfay/rstudio-conf-2020-production-grade-shiny-apps-with-golem
+    * https://talks.cpsievert.me/20200129/shinymeta.pdf
+  * OpenCPU
+  * Plumber
+    * A package that allows you to create a REST API by merely decorating your
+      existing R source code with special comments.
+    * Developed by RStudio
+    * "We're hitting R a million times a day so we made a talk about it."
+      * https://putrinprod.com/
+      * https://putrinprod.com/talks/rstudioconf2020.pdf
+      * plumber + docker + kubernetes
+
+** later package
+
+Provides concurrency to R (i.e. on a single thread).
+  * Runs code after a certain amount of time whenever the evaluation step of the
+    REPL is nonactive.
+  * Can be used e.g. to set up a polling loop.
+  * Possibly useful for I/O?
+
+** GitHub Actions
+
+GitHub continuous integration.
+  * GitHub's version of GitLab's CI process.
+  * Replaces Travis C.I.
+
+** Apache Arrow
+
+Continues to receive first-class support from the R community.
+  * Primary package authors are supported by RStudio and Ursa labs.
+
+** R's support for deep learning continues to develop
+
+Areas of development.
+  * Seem to be actively trying to keep pace with the Python ecosystem.
+  * Multiple talks about Sparkly, MLFlow, Keras, TensorFlow projects, each
+    supported by RStudio.
+  * Typically try to maintain feature equivalence, sometimes with some
+    additional higher level "idomatic R", constructs.
+  * Always playing keep-up.
+
+** FlatironKitchen
+  * Roche internal package.
+  * Has a fairly nice structure where you can compose functions for data
+    processing, variable creation, analyses, visualizations, etc.
+  * Not open sourced - maybe someday?
+  * Makes strong assumptions about the input format of the data.
+  * Appears to provide functionality at a high level.  If what you need to do
+    isn't supported, then you are out of luck.
+
+** Tidy evaluation
+
+Lionel Henry talk
+  * https://speakerdeck.com/lionelhenry/interactivity-and-programming-in-the-tidyverse
