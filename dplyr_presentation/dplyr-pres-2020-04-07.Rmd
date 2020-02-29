@@ -1,0 +1,36 @@
+---
+title: dplyr Overview Part 2
+author: David Pritchard
+date: June 13, 2019
+output: binb::metropolis
+---
+
+
+```{r, echo = FALSE}
+options(tibble.print_max = 6)
+options(tibble.print_min = 6)
+```
+
+
+# Motivation
+
+<!----------------------------------------------------------------------------->
+
+## Data frame abstract data type
+
+Programming languages used for processing data have typically developed the
+notion of what is often called a _data frame_
+\vspace{2mm}
+
+\begin{definition}[data frame]
+\vspace{0mm}
+An abstract data type that represents data as a rectangular collection of
+fields (or variable) and entries (or observations)
+\end{definition}
+
+\vspace{-2mm}
+* A field is an ordered collection of homogeneous data typically with some
+  semantic meaning.  E.g. age, weight, ...
+* An entry is an ordered collection of heterogeneous data that are somehow
+  associated.  E.g. a set of measurements obtained from performing a scientific
+  experiment.
