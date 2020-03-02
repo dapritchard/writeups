@@ -1,36 +1,259 @@
 ---
 title: dplyr Overview Part 2
 author: David Pritchard
-date: June 13, 2019
-output: binb::metropolis
+date: April 7, 2020
+output:
+  revealjs::revealjs_presentation:
+    theme: serif
+    center: false
 ---
 
 
 ```{r, echo = FALSE}
 options(tibble.print_max = 6)
 options(tibble.print_min = 6)
+
+knitr::opts_chunk$set(collapse = TRUE)
+
+# def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+# knitr::knit_hooks$set(chunk = function(x, options) {
+#   x <- def.chunk.hook(x, options)
+#   ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+# })
+# knitr::opts_chunk$set(size = "small")
 ```
 
 
 # Motivation
 
-<!----------------------------------------------------------------------------->
+## Historical perspective
 
-## Data frame abstract data type
+Metaprogramming
 
-Programming languages used for processing data have typically developed the
-notion of what is often called a _data frame_
-\vspace{2mm}
+  * The S language bears a strong similarity to Scheme[^scheme] (with some
+    notable exceptions).
+  * One particular language feature that is fundamental to Lisp is a form of
+    metaprogramming in which programs can create or manipulate other programs
+    at runtime.  <!-- Scott page 562 -->
+    
+[^scheme]: A Lisp dialect created by Guy Steele and Gerald Jay Sussman.
 
-\begin{definition}[data frame]
-\vspace{0mm}
-An abstract data type that represents data as a rectangular collection of
-fields (or variable) and entries (or observations)
-\end{definition}
 
-\vspace{-2mm}
-* A field is an ordered collection of homogeneous data typically with some
-  semantic meaning.  E.g. age, weight, ...
-* An entry is an ordered collection of heterogeneous data that are somehow
-  associated.  E.g. a set of measurements obtained from performing a scientific
-  experiment.
+
+
+## Historical perspective (cont.)
+
+Metaprogramming
+
+
+  * One form of metaprogramming that is available in many languages is the
+    ability to `eval` text strings.
+  * In Lisp there is no syntactical differentiation between code and data, so
+    metaprogramming involves direct manipulating of the program.
+  * S provides an interface to manipulate the data structure that programs are
+    stored in (called the AST) since S3 (S version 3) in order to provide
+    essentially the same functionality.
+
+
+
+
+## Abstract syntax trees
+
+Programs are naturally represented by the interpreter as a tree-like data
+structure.
+
+  * The read portion of the read-eval-print loop constructs the AST.
+  * The R interpreter (in contrast to S) is implemented as a lisp.
+  
+    * R's infix operators are translated to Polish notation (i.e. operators
+      precede their arguments).
+    * So, for example, `x + y` is translated internally to `"+"(x, y)`
+    
+
+
+
+## Abstract syntax tree example
+
+Consider the AST resulting from the expression `1 + 2 * 3`.  The AST has the
+following form:
+    
+  * The result of evaluating `+` on `1` and ...
+    * The result of evaluating `*` on `2` and `3`
+
+```{r}
+library(lobstr)
+ast(1 + 2 * 3)
+```
+
+You can construct a data structure representing an AST by using e.g. `quote(1 +
+2 * 3)`.
+
+
+
+
+## Abstract syntax tree components
+
+There are four types of data structures that can be found in an AST, which are
+collectively known as **expressions**:
+
+  * **Constant:** either `NULL` or a length-1 atomic vector.
+  * **Symbol:** the name of an object like e.g. `x`.  (These are synonymously
+    known as **name**s.)
+  * **Call**: A function call.
+  * **Pairlist**: a list-like object most often used to store a function's
+    formal arguments.
+
+
+
+
+## Language objects
+
+R has a notion of what it calls language objects:
+
+  * consists of calls, symbols, and expression vectors.
+  
+An expression vector is a list of R expressions.
+
+```{r}
+a <- expression(x + y, z)
+b <- parse(text = "x + y; z")  # equivalent up to the attributes
+is.expression(a)
+is.expression(b)
+a
+b
+```
+
+
+
+
+## Evaluating expressions
+
+You can use `eval` to evaluate an expression or expression vector.
+```{r}
+eval(parse(text = "x <- 2; x * x"))
+eval(1)
+eval(quote(mean(1L:11L)))
+eval(quote(x))
+```
+
+It is interesting to note that in most languages, `eval` takes a string as
+input.
+
+  * Since the elements of the AST are exposed to the user, `eval` operates on
+    them directly.
+
+
+
+
+## Examples of common AST elements
+
+```{r}
+identical(quote(1), 1)  # by definition, constants are self-evaluating
+is.language(1)
+
+b <- quote(x)
+is.language(b); is.symbol(b)
+
+c <- quote(1 + 2 * 3)
+is.language(c); is.call(c)
+```
+
+
+
+
+## Language objects (cont.)
+
+Some notes about language objects:
+
+  * Hadley Wickham and Lionel Henry use the term _expression_ to mean any of the
+    data structures found in an AST, and refer to the `expression` object as
+    _expression vectors_.  **We will follow suit.**
+  * Hadley suggests using lists of calls instead of expression vectors in most
+    cases.
+    
+    
+    
+    
+## Manipulating calls
+
+You can access and modify elements of a call using a list-like interface.
+
+```{r, collapse = TRUE}
+z <- quote(1 + 2 * 3)
+
+z[[1L]]
+is.symbol(z[[1L]])  # synonymous with `is.name`
+
+z[[2L]]
+is.numeric(z[[2L]])
+
+z[[3L]]
+is.call(z[[3L]])
+```
+
+
+
+
+## Manipulating calls (cont.)
+
+
+```{r, collapse = TRUE}
+z
+ast(1 + 2 * 3)
+
+length(z)
+z[[1L]] <- as.name("-")  # synonymous with `as.symbol`
+z[[2L]] <- quote(6 / 2)
+z
+```
+
+
+
+
+## Example parsing input
+
+```{r}
+xdist = "x = rnorm(1,y,1)
+y = rnorm(1,z,1)
+z = rnorm(1,5,1)"
+```
+
+
+
+
+## `parse_heir_minilang` definition
+
+```r
+parse_hier_minilang <- function(hierarchical) {
+  comb_hier <- function(outerdist, innerdist) {
+    out <- paste(
+      strsplit(outerdist[2L], innerdist[1L])[[1L]],
+      collapse = innerdist[2L]
+    )
+    c(outerdist[[1L]], out)
+  }
+  distexpr <- strsplit(
+    strsplit(hierarchical, "\n")[[1L]],
+    " *= *"
+  )
+  distcomb <- Reduce(comb_hier, distexpr)
+  distcomb[[2L]]
+}
+heir_dist_expr <- parse_hier_minilang(xdist)
+n_sims <- replicate(1000L, eval(parse(text = heir_dist_expr)))
+```
+
+
+
+
+# Promises
+
+
+
+<!-- promises page 457 Software for Data Analysis ----------------------------->
+
+<!-- R implements the grammer of S, with a few extensions --------------------->
+
+<!-- http://www.sumsar.net/blog/2014/11/tidbits-from-books-that-defined-s-and-r/ -->
+
+<!-- https://www.stat.auckland.ac.nz/~ihaka/downloads/Interface98.pdf -->
