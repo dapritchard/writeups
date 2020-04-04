@@ -35,7 +35,7 @@ Metaprogramming
   * One particular language feature that is fundamental to Lisp is a form of
     metaprogramming in which programs can create or manipulate other programs
     at runtime.  <!-- Scott page 562 -->
-    
+
 [^scheme]: A Lisp dialect created by Guy Steele and Gerald Jay Sussman.
 
 
@@ -64,11 +64,11 @@ structure.
 
   * The read portion of the read-eval-print loop constructs the AST.
   * The R interpreter (in contrast to S) is implemented as a lisp.
-  
+
     * R's infix operators are translated to Polish notation (i.e. operators
       precede their arguments).
     * So, for example, `x + y` is translated internally to `"+"(x, y)`
-    
+
 
 
 
@@ -76,7 +76,7 @@ structure.
 
 Consider the AST resulting from the expression `1 + 2 * 3`.  The AST has the
 following form:
-    
+
   * The result of evaluating `+` on `1` and ...
     * The result of evaluating `*` on `2` and `3`
 
@@ -111,7 +111,7 @@ collectively known as **expressions**:
 R has a notion of what it calls language objects:
 
   * consists of calls, symbols, and expression vectors.
-  
+
 An expression vector is a list of R expressions.
 
 ```{r}
@@ -170,10 +170,10 @@ Some notes about language objects:
     _expression vectors_.  **We will follow suit.**
   * Hadley suggests using lists of calls instead of expression vectors in most
     cases.
-    
-    
-    
-    
+
+
+
+
 ## Manipulating calls
 
 You can access and modify elements of a call using a list-like interface.
@@ -246,7 +246,60 @@ n_sims <- replicate(1000L, eval(parse(text = heir_dist_expr)))
 
 
 
-# Promises
+# Promises and lazy evaluation
+
+## Lazy evaluation in R
+
+The S language stipulates that the arguments of a function call are not
+evaluated until they are needed.
+
+  * A form of _lazy evaluation_.
+  * Implemented in R by assigning each formal argument name a special object of
+    type _promise_.
+
+
+
+
+## Promises
+
+The _promise_ type has the following characteristics.
+
+  * Contains three elements:
+    * The expression provided as input to the argument in the function call.
+    * The environment (i.e. the scope) in which to evaluate the expression.
+    * The value obtained by evaluating the expression (initially empty).
+  * The value of the promise is calculated the first time it is needed, and not
+    before.  After calculation the value is stored.
+  * Subsequent uses of the variable use the stored value.
+
+
+
+
+## Extracting the promise expression
+
+The `substitute` function creates an expression in a manner similar to `quote`.
+
+  * However, `substitute` performs the added step of replacing symbols that
+    it finds in the expression that exist in the specified environment.
+    * The environment is specified through the formal argument `env` (default is
+      the current environment).
+    * If a symbol in the expression has a binding in the specified environment,
+      then it replaces the symbol with the value bound to the symbol in the
+      environment.
+
+
+
+
+## Extracting the promise expression (cont.)
+
+
+```{r}
+print_input <- function(x) {
+  substitute(x)
+}
+print_input(1 + 2 * 3)
+```
+
 
 
 
