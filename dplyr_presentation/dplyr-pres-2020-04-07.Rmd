@@ -70,9 +70,10 @@ Metaprogramming
 
 Metaprogramming
 
-  * One form of metaprogramming that is available in many languages is the
-    ability to `eval` text strings.
-  * In Lisp there is no syntactical differentiation between code and data[^homoiconicity], so metaprogramming involves direct manipulating of the
+  * One familiar form of metaprogramming that is available in many languages is
+    the ability to `eval` text strings.
+  * In Lisp there is no syntactical differentiation between code and
+    data[^homoiconicity], so metaprogramming involves direct manipulating of the
     program.
   * S provides an interface to manipulate the data structure (more upcoming on
     this) that statements are stored in order to provide similar functionality.
@@ -80,8 +81,8 @@ Metaprogramming
     http://www.sumsar.net/blog/2014/11/tidbits-from-books-that-defined-s-and-r/
     -->
 
-[^homoiconicity]: This property is often referred to as _homoiconicity_, however
-there is some disagreement about the usage of the term, see
+[^homoiconicity]: This property is sometimes referred to as _homoiconicity_,
+however there is some disagreement about the usage of the term, see
 e.g. https://www.expressionsofchange.org/dont-say-homoiconic/.
 
 
@@ -153,40 +154,69 @@ use this terminology.
     AST
   * R has an `expression` object, which Wickham and Henry refer to as
     _expression vectors_.
-  * In general computer science literature, an expression is a combination of
-    one or more constants, variables, operators, and functions that the
+  * In the general computer science literature, an expression is a combination
+    of one or more constants, variables, operators, and functions that the
     programming language interprets.  The R Language definition refers to these
     as statements to disambiguate from expression vectors.
 
-In this documents, we will follow the convention proposed by Wickham and Henry.
+In this document, we will follow the convention proposed by Wickham and Henry.
 
 
 
 
 ## Language objects
 
-R has a primitive object type called language objects that are related to
-expressions.
+R has also has related concepts of language objects and language data types, so
+let's get these terminologies straight as well.
 
-One of R's primative object types are called language objects.  These consist of
-the following.
+  * A language object is an umbrella term referring to an object that is either
+    a call, expression, or symbol.
+    * `is.language` returns `TRUE` for any one of these three data types, and
+      `FALSE` otherwise.
+    * `typeof` may return `language` (see below), `expression`, or `symbol`,
+      depending on the object type.
+  * Confusingly, R also has a language sexp[^sexp] which is the data type used
+    to represent calls.
+    * `is.language` returns `TRUE`, `is.call` returns `TRUE`, `typeof` returns
+      `language`, and `mode` returns `call`.
 
-  * calls
-  * symbols
-  * expression vectors
+If you think this is poorly-chosen vocabulary, then you are not alone in this
+opinion.
+
+[^sexp]: A sexp is the vernacular used to refer to a symbolic expression, and is
+    also referred to as an s-expression or a sexpr.  Sexps are the foundational
+    data type that are available to the R language.  <!-- Section 1.1, R
+    Internals -->
 
 
 
 
-## Expression vector examples
+# Obtaining R expressions
 
-An expression vector is a list of R expressions.
+## AST elements: symbols
+
+As previously mentioned, constants are either `NULL` or a length-1 atomic
+vector such as `TRUE`, 1L, 2.5, or "mystring".
+
+  * These types each have a special read syntax that the parser recognizes.
+
+
+
+
+
+
+## Expression vectors
+
+An expression vector is an ordered collection of R statements represented as
+ASTs.  You can obtain an expression vector using e.g. `expression` and `parse`.
 
 ```{r}
+# `a` and `b` are equivalent up to the attributes
 a <- expression(x + y, z)
-b <- parse(text = "x + y; z")  # equivalent up to the attributes
+b <- parse(text = "x + y; z")
 is.expression(a)
 is.expression(b)
+all.equal(a, b, check.attributes = FALSE)
 a
 b
 ```
@@ -194,7 +224,7 @@ b
 
 
 
-## Evaluating expressions
+## Expressions
 
 You can use `eval` to evaluate an expression or expression vector.
 ```{r}
