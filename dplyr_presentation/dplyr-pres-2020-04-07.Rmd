@@ -5,8 +5,32 @@ date: April 7, 2020
 output:
   revealjs::revealjs_presentation:
     theme: serif
+    # theme: simple
     center: false
 ---
+
+<style>
+  .reveal section p {
+    display: inline-block;
+    font-size: 0.9em;
+    line-height: 1.2em;
+    vertical-align: top;
+    text-align: left;
+  }
+  .reveal h1 {
+    font-size: 1.8em;
+  }
+  .reveal h2 {
+    font-size: 1.2em;
+  }
+  .reveal ul {
+    font-size: 0.9em;
+  }
+  .reveal li {
+    font-size: 0.9em;
+    margin-bottom: 15px;
+  }
+</style>
 
 
 ```{r, echo = FALSE}
@@ -31,7 +55,8 @@ knitr::opts_chunk$set(collapse = TRUE)
 Metaprogramming
 
   * The S language bears a strong similarity to Scheme[^scheme] (with some
-    notable exceptions).
+    notable exceptions).  <!-- paraphrased from Ihaka R A Language for Data
+    Analysis and Graphics -->
   * One particular language feature that is fundamental to Lisp is a form of
     metaprogramming in which programs can create or manipulate other programs
     at runtime.  <!-- Scott page 562 -->
@@ -52,7 +77,9 @@ Metaprogramming
     metaprogramming involves direct manipulating of the program.
   * S provides an interface to manipulate the data structure that programs are
     stored in (called the AST) since S3 (S version 3) in order to provide
-    essentially the same functionality.
+    essentially the same functionality.  <!--
+    http://www.sumsar.net/blog/2014/11/tidbits-from-books-that-defined-s-and-r/
+    -->
 
 
 
@@ -77,7 +104,7 @@ structure.
 Consider the AST resulting from the expression `1 + 2 * 3`.  The AST has the
 following form:
 
-  * The result of evaluating `+` on `1` and ...
+  * The result of evaluating `+` on `1` and
     * The result of evaluating `*` on `2` and `3`
 
 ```{r}
@@ -86,7 +113,7 @@ ast(1 + 2 * 3)
 ```
 
 You can construct a data structure representing an AST by using e.g. `quote(1 +
-2 * 3)`.
+2 * 3)` (more on this later).
 
 
 
@@ -94,11 +121,11 @@ You can construct a data structure representing an AST by using e.g. `quote(1 +
 ## Abstract syntax tree components
 
 There are four types of data structures that can be found in an AST, which are
-collectively known as **expressions**:
+collectively known as **expressions**: <!-- Section 18.3, Advanced R -->
 
   * **Constant:** either `NULL` or a length-1 atomic vector.
   * **Symbol:** the name of an object like e.g. `x`.  (These are synonymously
-    known as **name**s.)
+    known in R as **name**s.)
   * **Call**: A function call.
   * **Pairlist**: a list-like object most often used to store a function's
     formal arguments.
