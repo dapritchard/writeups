@@ -70,50 +70,59 @@ Metaprogramming
 
 Metaprogramming
 
-
   * One form of metaprogramming that is available in many languages is the
     ability to `eval` text strings.
-  * In Lisp there is no syntactical differentiation between code and data, so
-    metaprogramming involves direct manipulating of the program.
-  * S provides an interface to manipulate the data structure that programs are
-    stored in (called the AST) since S3 (S version 3) in order to provide
-    essentially the same functionality.  <!--
+  * In Lisp there is no syntactical differentiation between code and data[^homoiconicity], so metaprogramming involves direct manipulating of the
+    program.
+  * S provides an interface to manipulate the data structure (more upcoming on
+    this) that statements are stored in order to provide similar functionality.
+    <!--
     http://www.sumsar.net/blog/2014/11/tidbits-from-books-that-defined-s-and-r/
     -->
+
+[^homoiconicity]: This property is often referred to as _homoiconicity_, however
+there is some disagreement about the usage of the term, see
+e.g. https://www.expressionsofchange.org/dont-say-homoiconic/.
 
 
 
 
 ## Abstract syntax trees
 
-Programs are naturally represented by the interpreter as a tree-like data
-structure.
+Statements in R and programming languages in general are naturally represented
+by the interpreter as a tree-like data structure called an **abstract syntax
+tree** (AST).
 
   * The read portion of the read-eval-print loop constructs the AST.
-  * The R interpreter (in contrast to S) is implemented as a lisp.
-
+  * The R interpreter (in contrast to S) is implemented as a Lisp.
     * R's infix operators are translated to Polish notation (i.e. operators
-      precede their arguments).
+      precede their arguments, and consequently is also known as prefix
+      notation).
     * So, for example, `x + y` is translated internally to `"+"(x, y)`
+    * Even structures like if-else if-else and for loops that are represented as
+      syntax in many languages are mapped to prefix functions.
 
 
 
 
 ## Abstract syntax tree example
 
-Consider the AST resulting from the expression `1 + 2 * 3`.  The AST has the
+Consider the AST constructed from the expression `1 + 2 * 3`.  The AST has the
 following form:
 
   * The result of evaluating `+` on `1` and
     * The result of evaluating `*` on `2` and `3`
+
+The `lobstr::ast` function provides a visual representation of an AST
+constructed from an R statement.
 
 ```{r}
 library(lobstr)
 ast(1 + 2 * 3)
 ```
 
-You can construct a data structure representing an AST by using e.g. `quote(1 +
-2 * 3)` (more on this later).
+<!-- You can construct a data structure representing an AST by using
+e.g. `quote(1 + --> <!-- 2 * 3)` (more on this later). -->
 
 
 
@@ -121,23 +130,55 @@ You can construct a data structure representing an AST by using e.g. `quote(1 +
 ## Abstract syntax tree components
 
 There are four types of data structures that can be found in an AST, which are
-collectively known as **expressions**: <!-- Section 18.3, Advanced R -->
+collectively referred to as **expressions** by Wickham, Henry, etc.: <!--
+Section 18.3, Advanced R -->
 
+  * **Call**: A function call.
   * **Constant:** either `NULL` or a length-1 atomic vector.
   * **Symbol:** the name of an object like e.g. `x`.  (These are synonymously
     known in R as **name**s.)
-  * **Call**: A function call.
   * **Pairlist**: a list-like object most often used to store a function's
     formal arguments.
 
 
 
 
+## A note about terminology:
+
+Hadley Wickham and Lionel Henry have co-opted the term _expression_ mean any of
+the data structures found in an AST, however the R Language Definition does not
+use this terminology.
+
+  * The term _expression_ is used to mean any of the data structures found in an
+    AST
+  * R has an `expression` object, which Wickham and Henry refer to as
+    _expression vectors_.
+  * In general computer science literature, an expression is a combination of
+    one or more constants, variables, operators, and functions that the
+    programming language interprets.  The R Language definition refers to these
+    as statements to disambiguate from expression vectors.
+
+In this documents, we will follow the convention proposed by Wickham and Henry.
+
+
+
+
 ## Language objects
 
-R has a notion of what it calls language objects:
+R has a primitive object type called language objects that are related to
+expressions.
 
-  * consists of calls, symbols, and expression vectors.
+One of R's primative object types are called language objects.  These consist of
+the following.
+
+  * calls
+  * symbols
+  * expression vectors
+
+
+
+
+## Expression vector examples
 
 An expression vector is a list of R expressions.
 
@@ -188,15 +229,15 @@ is.language(c); is.call(c)
 
 
 
-## Language objects (cont.)
+<!-- ## Language objects (cont.) -->
 
-Some notes about language objects:
+<!-- Some notes about language objects: -->
 
-  * Hadley Wickham and Lionel Henry use the term _expression_ to mean any of the
-    data structures found in an AST, and refer to the `expression` object as
-    _expression vectors_.  **We will follow suit.**
-  * Hadley suggests using lists of calls instead of expression vectors in most
-    cases.
+<!--   * Hadley Wickham and Lionel Henry use the term _expression_ to mean any of the -->
+<!--     data structures found in an AST, and refer to the `expression` object as -->
+<!--     _expression vectors_.  **We will follow suit.** -->
+<!--   * Hadley suggests using lists of calls instead of expression vectors in most -->
+<!--     cases. -->
 
 
 
@@ -337,3 +378,5 @@ print_input(1 + 2 * 3)
 <!-- http://www.sumsar.net/blog/2014/11/tidbits-from-books-that-defined-s-and-r/ -->
 
 <!-- https://www.stat.auckland.ac.nz/~ihaka/downloads/Interface98.pdf -->
+
+<!-- https://rpubs.com/maechler/R_language_objs -->
