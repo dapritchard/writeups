@@ -19,6 +19,7 @@ output:
   }
   .reveal h1 {
     font-size: 1.8em;
+    color: darkblue;
   }
   .reveal h2 {
     font-size: 1.2em;
@@ -48,13 +49,6 @@ options(tibble.print_max = 6)
 options(tibble.print_min = 6)
 
 knitr::opts_chunk$set(collapse = TRUE)
-
-# def.chunk.hook  <- knitr::knit_hooks$get("chunk")
-# knitr::knit_hooks$set(chunk = function(x, options) {
-#   x <- def.chunk.hook(x, options)
-#   ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
-# })
-# knitr::opts_chunk$set(size = "small")
 ```
 
 
@@ -100,9 +94,9 @@ e.g. https://www.expressionsofchange.org/dont-say-homoiconic/.
 
 ## Abstract syntax trees
 
-Statements in R and programming languages in general are naturally represented
-by the interpreter as a tree-like data structure called an **abstract syntax
-tree** (AST).
+Expressions in programming languages are naturally represented by the
+interpreter as a tree-like data structure called an **abstract syntax tree**
+(AST).
 
   * The read portion of the read-eval-print loop constructs the AST.
   * The R interpreter (in contrast to S) is implemented as a Lisp.
@@ -132,16 +126,13 @@ library(lobstr)
 ast(1 + 2 * 3)
 ```
 
-<!-- You can construct a data structure representing an AST by using
-e.g. `quote(1 + --> <!-- 2 * 3)` (more on this later). -->
-
 
 
 
 ## Abstract syntax tree components
 
 There are four types of data structures that can be found in an AST, which are
-collectively referred to as **expressions** by Wickham, Henry, etc.: <!--
+collectively referred to as _expressions_ by Wickham, Henry, etc.: <!--
 Section 18.3, Advanced R -->
 
   * **Call**: A function call.
@@ -160,14 +151,14 @@ Hadley Wickham and Lionel Henry have co-opted the term _expression_ mean any of
 the data structures found in an AST, however the R Language Definition does not
 use this terminology.
 
-  * The term _expression_ is used to mean any of the data structures found in an
-    AST
+  * The term _expression_ is used by Wickham and Henry to mean any of the data
+    structures found in an AST
   * R has an `expression` data type, which Wickham and Henry refer to as
     _expression vectors_.
   * In the general computer science literature, an expression is a combination
     of one or more constants, variables, operators, and functions that the
     programming language interprets.  The R Language definition refers to these
-    as statements to disambiguate from expression vectors.
+    as _statements_ to disambiguate from expression vectors.
 
 In this document, we will follow the convention proposed by Wickham and Henry.
 
@@ -185,24 +176,26 @@ let's get these terminologies straight as well.
       `FALSE` otherwise.
     * `typeof` may return `language` (see below), `expression`, or `symbol`,
       depending on the object type.
-  * Confusingly, R also has a language sexp[^sexp] which is the data type used
-    to represent calls.
+  * Confusingly, R also has a language data type which is the data type used to
+    represent calls.
     * `is.language` returns `TRUE`, `is.call` returns `TRUE`, `typeof` returns
       `language`, and `mode` returns `call`.
 
 If you think this is unfortunate vocabulary, then you are not alone.
 
-[^sexp]: A sexp is the vernacular used to refer to a symbolic expression, and is
-    also referred to as an s-expression or a sexpr.  Sexps are the foundational
-    data type that are available to the R language.  <!-- Section 1.1, R
-    Internals -->
+<!-- [^sexp]: A sexp is the vernacular used to refer to a symbolic expression, and is -->
+<!--     also referred to as an s-expression or a sexpr.  Sexps are the foundational -->
+<!--     data type that are available to the R language.  <\!-- Section 1.1, R -->
+<!--     Internals -\-> -->
 
 
 
 
-# Obtaining R expressions
+# ------------------------------------------------------------------------------
 
-## Expression evaluation
+# Capturing and evaluating expressions
+
+## Typical expression evaluation
 
 One of the tasks that is performed by an interpreter (indeed, the interpreter's
 raison d'être) such as R is to evaluate expressions (i.e. the 'eval' stage of
@@ -216,7 +209,7 @@ the read-eval-print loop).
 
 
 
-## Capturing code: quoting code
+## Quoting code
 
 In order to be able to obtain a data structure representing an unevaluated
 expression or sub-expression, Lisp-like languages such as R provide a mechanism
@@ -237,7 +230,7 @@ entirely separate meaning of the word "quoting."
 
 
 
-## Capturing code: expression vectors
+## Expression vectors
 
 Expression vectors are a data type providing an ordered collection of
 expressions.  The functions `expression` and `parse` each return expression
@@ -253,12 +246,35 @@ vectors and can be used to capture expressions.
 a <- expression(x + y, z)
 b <- parse(text = "x + y; z")
 all.equal(a, b, check.attributes = FALSE)
+typeof(a)
 a
-b
 ```
 
 
 
+
+## Evaluating expressions
+
+You can use `eval` to evaluate an expression or expression vector.
+```{r}
+eval(parse(text = "x <- 2; x * x"))
+eval(1)
+eval(quote(mean(seq(1, 101))))
+eval(quote(x))
+```
+
+It is interesting to note that in most languages, `eval` takes a string as
+input.
+
+  * Since the elements of the AST are exposed to the user, `eval` operates on
+    them directly.
+
+
+
+
+# ------------------------------------------------------------------------------
+
+# Expression elements
 
 ## Expression elements: constants
 
@@ -272,6 +288,7 @@ such as `TRUE`, `1L`, `2.5`, `1i`, or `"mystring"`.
     constant itself.
 
 ```{r}
+# expression vectors can be treated as a list-like object
 sapply(expression(TRUE, 1L, 2.5, 1i, "mystring"), typeof)
 identical(2.5, quote(2.5))
 ```
@@ -279,37 +296,109 @@ identical(2.5, quote(2.5))
 
 
 
-## Expressions
+## Expression elements: symbols
 
-You can use `eval` to evaluate an expression or expression vector.
-```{r}
-eval(parse(text = "x <- 2; x * x"))
-eval(1)
-eval(quote(mean(1L:11L)))
-eval(quote(x))
-```
+A symbol represents the name of an object, such as `x` in the expression `x +
+1`.
 
-It is interesting to note that in most languages, `eval` takes a string as
-input.
-
-  * Since the elements of the AST are exposed to the user, `eval` operates on
-    them directly.
-
-
-
-
-## Examples of common AST elements
+  * When the R evaluator evaluates a symbol, it replaces it with the value that
+    is bound to the appropriate variable of the same name
+  * The variable is selected according to the lexical scoping rules.
 
 ```{r}
-identical(quote(1), 1)  # by definition, constants are self-evaluating
-is.language(1)
-
-b <- quote(x)
-is.language(b); is.symbol(b)
-
-c <- quote(1 + 2 * 3)
-is.language(c); is.call(c)
+quote(x)
+typeof(quote(x))
+identical(quote(x), as.symbol("x"))
+identical("x", as.character(quote(x)))
 ```
+
+
+
+
+## Expression elements: pairlists
+
+Pairlists are most often encountered as the data structure representing the formal
+arguments to a function.
+
+  * Pairlists are implemented using a linked list, but can be treated just like
+    a regular list.
+
+```{r}
+lobstr::ast(function(x = 2, y = 3) 22)
+f <- quote(function(x = 2, y = 3) 22)
+f[[2L]]
+typeof(f[[2L]])
+```
+
+
+
+
+## Expression elements: calls
+
+A call is a unevaluated function call.
+
+```{r}
+lobstr::ast(f(1, g(7, 2)))
+x = quote(f(1, g(7, 2)))
+is.language(x)
+is.call(x)
+typeof(x)
+mode(x)
+```
+
+
+
+
+## Constructing calls
+
+TODO
+
+
+
+
+## Formulas: a most useful type of call
+
+TODO
+
+
+
+
+# Manipulating expressions
+
+```{r}
+# TODO
+```
+
+
+
+
+## Quasiquotation
+
+TODO
+<!-- quote, substitute -->
+
+
+
+
+## Constructing calls
+
+<!-- call -->
+
+
+
+
+<!-- ## Examples of common AST elements -->
+
+<!-- ```{r} -->
+<!-- identical(quote(1), 1)  # by definition, constants are self-evaluating -->
+<!-- is.language(1) -->
+
+<!-- b <- quote(x) -->
+<!-- is.language(b); is.symbol(b) -->
+
+<!-- c <- quote(1 + 2 * 3) -->
+<!-- is.language(c); is.call(c) -->
+<!-- ``` -->
 
 
 
