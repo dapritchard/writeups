@@ -12,7 +12,7 @@ output:
 <style>
   .reveal section p {
     display: inline-block;
-    font-size: 0.9em;
+    font-size: 0.7em;
     line-height: 1.2em;
     vertical-align: top;
     text-align: left;
@@ -24,11 +24,21 @@ output:
     font-size: 1.2em;
   }
   .reveal ul {
+    font-size: 0.7em;
+  }
+  .reveal ul ul {
     font-size: 0.9em;
+    <!-- line-height: 350%; -->
+    <!-- margin-bottom: 45px; -->
   }
   .reveal li {
-    font-size: 0.9em;
+    line-height: 100%;
     margin-bottom: 15px;
+    margin-top: 00px;
+  }
+  .reveal li li {
+    margin-top: 10px;
+    <!-- margin-bottom: 10px; -->
   }
 </style>
 
