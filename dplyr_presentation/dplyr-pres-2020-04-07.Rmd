@@ -256,6 +256,22 @@ is an entirely separate meaning of the word "quoting."
 
 
 
+## Manipulating expressions
+
+You can access and modify expressions using a list-like interface.
+
+```{r, collapse = TRUE}
+lobstr::ast(f(1, g(7, 2)))
+z <- quote(f(1, g(7, 2)))
+z
+
+z[[3L]][[3L]] <- quote(h(99))
+z
+```
+
+
+
+
 ## Expression vectors
 
 Expression vectors are a data type providing an ordered collection of
@@ -279,6 +295,36 @@ a
 
 
 
+## Constructing text from an expression
+
+TODO: deparse
+
+
+
+
+## Quotation in rlang
+
+The rlang library provides several alternatives for quotation.
+
+  * `rlang::expr` is a replacement for `quote`.
+  * `rlang::exprs` is similar to `expression`, except that it returns
+    a list of expressions rather than an expression vector (this is a stated
+    design choice by the library's creators).
+  * `rlang::parse_expr` and `rlang::parse_exprs` are similar to `parse(text =
+    "somestring")`, (the former rlang variant returns an expression, and the
+    latter returns a list of expressions).
+
+```{r}
+identical(quote(22 * y), rlang::expr(22 * y))
+z = rlang::exprs(a = 1, b = x, c = f("one", 2))
+str(z)
+zz = list(a = quote(1), b = quote(x), c = quote(f("one", 2)))
+identical(z, zz)
+```
+
+
+
+
 ## Evaluating expressions
 
 You can use `eval` to evaluate an expression or expression vector.
@@ -291,8 +337,8 @@ eval(quote(x))
 
   * It is interesting to note that in most languages, `eval` takes a string as
     input.
-  * Since the elements of the AST are exposed to the user, `eval` operates on
-    them directly.
+  * Since the elements of the AST are exposed to the user in R, `eval` operates
+    on them directly.
 
 
 
@@ -315,6 +361,7 @@ such as `TRUE`, `1L`, `2.5`, `1i`, or `"mystring"`.
 ```{r}
 # expression vectors can be treated as a list-like object
 sapply(expression(TRUE, 1L, 2.5, 1i, "mystring"), typeof)
+sapply(expression(TRUE, 1L, 2.5, 1i, "mystring"), rlang::is_syntactic_literal)
 identical(2.5, quote(2.5))
 ```
 
@@ -332,6 +379,7 @@ A symbol represents the name of an object, such as `x` in the expression `x +
 
 ```{r}
 quote(x)
+c(is.symbol(x), rlang::is_symbol(x))
 typeof(quote(x))
 identical(quote(x), as.symbol("x"))
 identical("x", as.character(quote(x)))
@@ -349,11 +397,10 @@ arguments to a function.
     a regular list.
 
 ```{r}
-# you can access the elements of a call using a list-like interface to
-# extract the pairlist
-lobstr::ast(function(x = 2, y = 3) 22)
-f <- quote(function(x = 2, y = 3) 22)
+lobstr::ast(function(x = 2) 22)
+f <- quote(function(x = 2) 22)
 f[[2L]]
+c(is.pairlist(f[[2L]]), rlang::is_pairlist(f[[2L]]))
 typeof(f[[2L]])
 ```
 
@@ -368,7 +415,7 @@ A call is a unevaluated function call.
 lobstr::ast(f(1, g(7, 2)))
 x = quote(f(1, g(7, 2)))
 is.language(x)
-is.call(x)
+c(is.call(x), rlang::is_call(x))
 typeof(x)
 mode(x)
 ```
@@ -392,97 +439,6 @@ TODO
 
 <!----------------------------------------------------------------------------->
 
-# Expressions interface
-
-```{r}
-# TODO
-```
-
-
-
-
-## Quasiquotation
-
-TODO
-<!-- quote, substitute -->
-
-
-
-
-## Manipulating calls
-
-You can access and modify elements of a call using a list-like interface.
-
-```{r, collapse = TRUE}
-z <- quote(1 + 2 * 3)
-
-z[[1L]]
-is.symbol(z[[1L]])  # synonymous with `is.name`
-
-z[[2L]]
-is.numeric(z[[2L]])
-
-z[[3L]]
-is.call(z[[3L]])
-```
-
-
-
-
-## Manipulating calls (cont.)
-
-
-```{r, collapse = TRUE}
-z
-ast(1 + 2 * 3)
-
-length(z)
-z[[1L]] <- as.name("-")  # synonymous with `as.symbol`
-z[[2L]] <- quote(6 / 2)
-z
-```
-
-
-
-
-## Example parsing input
-
-```{r}
-xdist = "x = rnorm(1,y,1)
-y = rnorm(1,z,1)
-z = rnorm(1,5,1)"
-```
-
-
-
-
-## `parse_heir_minilang` definition
-
-```r
-parse_hier_minilang <- function(hierarchical) {
-  comb_hier <- function(outerdist, innerdist) {
-    out <- paste(
-      strsplit(outerdist[2L], innerdist[1L])[[1L]],
-      collapse = innerdist[2L]
-    )
-    c(outerdist[[1L]], out)
-  }
-  distexpr <- strsplit(
-    strsplit(hierarchical, "\n")[[1L]],
-    " *= *"
-  )
-  distcomb <- Reduce(comb_hier, distexpr)
-  distcomb[[2L]]
-}
-heir_dist_expr <- parse_hier_minilang(xdist)
-n_sims <- replicate(1000L, eval(parse(text = heir_dist_expr)))
-```
-
-
-
-
-<!----------------------------------------------------------------------------->
-
 # Promises and lazy evaluation
 
 ## Lazy evaluation in R
@@ -492,7 +448,7 @@ evaluated until they are needed.
 
   * A form of _lazy evaluation_.
   * Implemented in R by assigning each formal argument name a special object of
-    type _promise_.
+    type _promise_. <!-- Section 13.2, Software for Data Analysis -->
 
 
 
