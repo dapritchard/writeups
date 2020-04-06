@@ -260,6 +260,25 @@ b
 
 
 
+## Expression elements: constants
+
+As previously mentioned, constants are either `NULL` or a length-1 atomic vector
+such as `TRUE`, `1L`, `2.5`, `1i`, or `"mystring"`.
+
+  * These types each have a special read syntax that the parser recognizes,
+    creating an object with the specific type.
+  * The defining property of constants in general is that they are _self
+    evaluating_, meaning that the result of evaluating the constant is the
+    constant itself.
+
+```{r}
+sapply(expression(TRUE, 1L, 2.5, 1i, "mystring"), typeof)
+identical(2.5, quote(2.5))
+```
+
+
+
+
 ## Expressions
 
 You can use `eval` to evaluate an expression or expression vector.
