@@ -162,7 +162,7 @@ use this terminology.
 
   * The term _expression_ is used to mean any of the data structures found in an
     AST
-  * R has an `expression` object, which Wickham and Henry refer to as
+  * R has an `expression` data type, which Wickham and Henry refer to as
     _expression vectors_.
   * In the general computer science literature, an expression is a combination
     of one or more constants, variables, operators, and functions that the
@@ -190,8 +190,7 @@ let's get these terminologies straight as well.
     * `is.language` returns `TRUE`, `is.call` returns `TRUE`, `typeof` returns
       `language`, and `mode` returns `call`.
 
-If you think this is poorly-chosen vocabulary, then you are not alone in this
-opinion.
+If you think this is unfortunate vocabulary, then you are not alone.
 
 [^sexp]: A sexp is the vernacular used to refer to a symbolic expression, and is
     also referred to as an s-expression or a sexpr.  Sexps are the foundational
@@ -203,29 +202,56 @@ opinion.
 
 # Obtaining R expressions
 
-## AST elements: symbols
+## Expression evaluation
 
-As previously mentioned, constants are either `NULL` or a length-1 atomic
-vector such as `TRUE`, 1L, 2.5, or "mystring".
+One of the tasks that is performed by an interpreter (indeed, the interpreter's
+raison d'être) such as R is to evaluate expressions (i.e. the 'eval' stage of
+the read-eval-print loop).
 
-  * These types each have a special read syntax that the parser recognizes.
+  * Evaluating an expression produces a value.
+  * Expressions may consist of sub-expressions (e.g. `f(1, g(7, 2))`).
+  * Sub-expressions are recursively evaluated until they cannot be simplified
+    any further (at which point the expression is said to be in _normal form_).
 
 
 
 
+## Capturing code: quoting code
+
+In order to be able to obtain a data structure representing an unevaluated
+expression or sub-expression, Lisp-like languages such as R provide a mechanism
+called _quotation_, which is a function that simply returns its input unmolested
+by the evaluator.  R provides several interfaces for quotation.
+
+  * The `quote` function is perhaps the most fundamental expression of
+    quotation in R, but as we will see there are many others.
+
+```{r}
+quote(1 + 2 * 3)
+```
+
+Note that it is common to refer to "quoting" a section of source code to mean
+placing single or double quotation marks around that code, but this is an
+entirely separate meaning of the word "quoting."
 
 
-## Expression vectors
 
-An expression vector is an ordered collection of R statements represented as
-ASTs.  You can obtain an expression vector using e.g. `expression` and `parse`.
+
+## Capturing code: expression vectors
+
+Expression vectors are a data type providing an ordered collection of
+expressions.  The functions `expression` and `parse` each return expression
+vectors and can be used to capture expressions.
+
+  * The `expression` function performs quotation on each of a sequence of
+    comma-separated expressions.
+  * The `parse` function parses a sequence of statements either from a source
+    file or a text string.
 
 ```{r}
 # `a` and `b` are equivalent up to the attributes
 a <- expression(x + y, z)
 b <- parse(text = "x + y; z")
-is.expression(a)
-is.expression(b)
 all.equal(a, b, check.attributes = FALSE)
 a
 b
