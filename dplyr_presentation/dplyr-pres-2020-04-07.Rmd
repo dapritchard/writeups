@@ -64,30 +64,40 @@ Metaprogramming
   * One particular language feature that is fundamental to Lisp is a form of
     metaprogramming in which programs can create or manipulate other programs
     at runtime.  <!-- Scott page 562 -->
-
-[^scheme]: A Lisp dialect created by Guy Steele and Gerald Jay Sussman.
-
-
-
-
-## Historical perspective (cont.)
-
-Metaprogramming
-
-  * One familiar form of metaprogramming that is available in many languages is
-    the ability to `eval` text strings.
   * In Lisp there is no syntactical differentiation between code and
     data[^homoiconicity], so metaprogramming involves direct manipulating of the
-    program.
-  * S provides an interface to manipulate the data structure (more upcoming on
-    this) that statements are stored in order to provide similar functionality.
-    <!--
+    program.  S provides an interface to manipulate the data structure (more
+    upcoming on this) that statements are stored in order to provide similar
+    functionality.  <!--
     http://www.sumsar.net/blog/2014/11/tidbits-from-books-that-defined-s-and-r/
     -->
+
+[^scheme]: A Lisp dialect created by Guy Steele and Gerald Jay Sussman.
 
 [^homoiconicity]: This property is sometimes referred to as _homoiconicity_,
 however there is some disagreement about the usage of the term, see
 e.g. https://www.expressionsofchange.org/dont-say-homoiconic/.
+
+
+
+
+<!-- ## Historical perspective (cont.) -->
+
+<!-- Metaprogramming -->
+
+<!--   * One familiar form of metaprogramming that is available in many languages is -->
+<!--     the ability to `eval` text strings. -->
+<!--   * In Lisp there is no syntactical differentiation between code and -->
+<!--     data[^homoiconicity], so metaprogramming involves direct manipulating of the -->
+<!--     program.  S provides an interface to manipulate the data structure (more -->
+<!--     upcoming on this) that statements are stored in order to provide similar -->
+<!--     functionality.  <\!-- -->
+<!--     http://www.sumsar.net/blog/2014/11/tidbits-from-books-that-defined-s-and-r/ -->
+<!--     -\-> -->
+
+<!-- [^homoiconicity]: This property is sometimes referred to as _homoiconicity_, -->
+<!-- however there is some disagreement about the usage of the term, see -->
+<!-- e.g. https://www.expressionsofchange.org/dont-say-homoiconic/. -->
 
 
 
@@ -129,10 +139,31 @@ ast(1 + 2 * 3)
 
 
 
+## Why was S so closely modeled after Scheme?
+
+In 1986, the new version of S titled S3, in the words of John Chambers, featured
+
+> dynamically generated, self-describing objects and a strong (though not
+> strict) adherence to the ideas of functional programming.
+
+Chambers further writes that
+
+> The goal of functional programming has much in common with our _Prime
+> Directive_: to provide software that is understandable and as demonstrably
+> correct as possible.
+
+Given a lack of actual information regarding this topic, I delve into the realm
+of speculation to propose that Scheme was viewed as a paragon of a functional
+programming language, and is one that has thankfully stood up to the test of
+time.
+
+
+
+
 ## Abstract syntax tree components
 
-There are four types of data structures that can be found in an AST, which are
-collectively referred to as _expressions_ by Wickham, Henry, etc.: <!--
+There are four types of data structures that can be found in an AST in R, which
+are collectively referred to as _expressions_ by Wickham, Henry, etc.: <!--
 Section 18.3, Advanced R -->
 
   * **Call**: A function call.
@@ -183,15 +214,10 @@ let's get these terminologies straight as well.
 
 If you think this is unfortunate vocabulary, then you are not alone.
 
-<!-- [^sexp]: A sexp is the vernacular used to refer to a symbolic expression, and is -->
-<!--     also referred to as an s-expression or a sexpr.  Sexps are the foundational -->
-<!--     data type that are available to the R language.  <\!-- Section 1.1, R -->
-<!--     Internals -\-> -->
 
 
 
-
-# ------------------------------------------------------------------------------
+<!----------------------------------------------------------------------------->
 
 # Capturing and evaluating expressions
 
@@ -223,9 +249,9 @@ by the evaluator.  R provides several interfaces for quotation.
 quote(1 + 2 * 3)
 ```
 
-Note that it is common to refer to "quoting" a section of source code to mean
-placing single or double quotation marks around that code, but this is an
-entirely separate meaning of the word "quoting."
+As an aside, note that it is common to refer to "quoting" a section of source
+code to mean placing single or double quotation marks around that code, but this
+is an entirely separate meaning of the word "quoting."
 
 
 
@@ -263,16 +289,15 @@ eval(quote(mean(seq(1, 101))))
 eval(quote(x))
 ```
 
-It is interesting to note that in most languages, `eval` takes a string as
-input.
-
+  * It is interesting to note that in most languages, `eval` takes a string as
+    input.
   * Since the elements of the AST are exposed to the user, `eval` operates on
     them directly.
 
 
 
 
-# ------------------------------------------------------------------------------
+<!----------------------------------------------------------------------------->
 
 # Expression elements
 
@@ -324,6 +349,8 @@ arguments to a function.
     a regular list.
 
 ```{r}
+# you can access the elements of a call using a list-like interface to
+# extract the pairlist
 lobstr::ast(function(x = 2, y = 3) 22)
 f <- quote(function(x = 2, y = 3) 22)
 f[[2L]]
@@ -363,7 +390,9 @@ TODO
 
 
 
-# Manipulating expressions
+<!----------------------------------------------------------------------------->
+
+# Expressions interface
 
 ```{r}
 # TODO
@@ -376,42 +405,6 @@ TODO
 
 TODO
 <!-- quote, substitute -->
-
-
-
-
-## Constructing calls
-
-<!-- call -->
-
-
-
-
-<!-- ## Examples of common AST elements -->
-
-<!-- ```{r} -->
-<!-- identical(quote(1), 1)  # by definition, constants are self-evaluating -->
-<!-- is.language(1) -->
-
-<!-- b <- quote(x) -->
-<!-- is.language(b); is.symbol(b) -->
-
-<!-- c <- quote(1 + 2 * 3) -->
-<!-- is.language(c); is.call(c) -->
-<!-- ``` -->
-
-
-
-
-<!-- ## Language objects (cont.) -->
-
-<!-- Some notes about language objects: -->
-
-<!--   * Hadley Wickham and Lionel Henry use the term _expression_ to mean any of the -->
-<!--     data structures found in an AST, and refer to the `expression` object as -->
-<!--     _expression vectors_.  **We will follow suit.** -->
-<!--   * Hadley suggests using lists of calls instead of expression vectors in most -->
-<!--     cases. -->
 
 
 
@@ -487,6 +480,8 @@ n_sims <- replicate(1000L, eval(parse(text = heir_dist_expr)))
 
 
 
+
+<!----------------------------------------------------------------------------->
 
 # Promises and lazy evaluation
 
