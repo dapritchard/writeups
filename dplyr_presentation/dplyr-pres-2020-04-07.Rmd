@@ -49,10 +49,46 @@ options(tibble.print_max = 6)
 options(tibble.print_min = 6)
 
 knitr::opts_chunk$set(collapse = TRUE)
+suppressWarnings(suppressMessages(library(dplyr)))
 ```
 
 
 # Motivation
+
+## Motivating examples
+
+The R package dplyr is arguably one of the most valuable tools in the R
+ecosystem.  dplyr makes use of a number of facilities in the R programming
+language to provide a high level of ergonomics.  Consider the following
+examples.
+
+```{r, results="hide"}
+library(dplyr)
+mutate(mtcars, y = 0.45 * wt, z = 1000 * y)
+select(iris, -starts_with("Petal"))
+```
+
+In the first example, `wt` refers to a variable name in `mtcars`, while `z`
+refers to a variable `y` that doesn't exist at call time.  In the second
+example, the `select` function provides the user with a domain-specific language
+that is used to remove any variables starting with `"Petal"`.
+
+
+
+
+## Tidy evaluation
+
+The niceties demonstrated in the previous slide do come at a cost: they sometime
+require some extra techniques when using them, as anyone who has programmed with
+dplyr for some time will have discovered.
+
+  * The custom evaluation used by dplyr and other libraries is powered by the
+    rlang library and which is referred to by its authors as _tidy evaluation_.
+  * In the upcoming slides, we will aim to cover the set of concepts of
+    foundational concepts upon which rlang is constructed.
+
+
+
 
 ## Historical perspective
 
@@ -295,6 +331,13 @@ a
 
 
 
+## Lists of expressions with alist
+
+TODO
+
+
+
+
 ## Constructing text from an expression
 
 TODO: deparse
@@ -307,9 +350,8 @@ TODO: deparse
 The rlang library provides several alternatives for quotation.
 
   * `rlang::expr` is a replacement for `quote`.
-  * `rlang::exprs` is similar to `expression`, except that it returns
-    a list of expressions rather than an expression vector (this is a stated
-    design choice by the library's creators).
+  * `rlang::exprs` is a replacement for `alist` (and serves a similar purpose to
+    `expression`).
   * `rlang::parse_expr` and `rlang::parse_exprs` are similar to `parse(text =
     "somestring")`, (the former rlang variant returns an expression, and the
     latter returns a list of expressions).
@@ -439,6 +481,24 @@ TODO
 
 <!----------------------------------------------------------------------------->
 
+# Environments
+
+Environments are a data structure that are used by R to implement lexical
+scoping.
+
+  * When constructing an interpreter, a common approach to scoping is to
+    construct a name-value map for each scope, and then traverse the mappings
+    until the appropriate match is found or is determined to not exist.
+  * R follows this scheme, but goes the additional step of making environments a
+    first-class object.
+  * Expressions can be evaluated in a chosen environment, which provides a
+    mechanism for authors to override the usual scoping rules.
+
+
+
+
+<!----------------------------------------------------------------------------->
+
 # Promises and lazy evaluation
 
 ## Lazy evaluation in R
@@ -449,6 +509,8 @@ evaluated until they are needed.
   * A form of _lazy evaluation_.
   * Implemented in R by assigning each formal argument name a special object of
     type _promise_. <!-- Section 13.2, Software for Data Analysis -->
+  * As an interesting aside, R package lazy loading of data is implemented on
+    top of promises.
 
 
 
@@ -459,7 +521,7 @@ The _promise_ type has the following characteristics.
 
   * Contains three elements:
     * The expression provided as input to the argument in the function call.
-    * The environment (i.e. the scope) in which to evaluate the expression.
+    * The environment in which to evaluate the expression.
     * The value obtained by evaluating the expression (initially empty).
   * The value of the promise is calculated the first time it is needed, and not
     before.  After calculation the value is stored.
@@ -470,28 +532,44 @@ The _promise_ type has the following characteristics.
 
 ## Extracting the promise expression
 
-The `substitute` function creates an expression in a manner similar to `quote`.
+The `substitute` function captures an expression in a manner similar to `quote`.
 
   * However, `substitute` performs the added step of replacing symbols that
     it finds in the expression that exist in the specified environment.
-    * The environment is specified through the formal argument `env` (default is
-      the current environment).
-    * If a symbol in the expression has a binding in the specified environment,
-      then it replaces the symbol with the value bound to the symbol in the
-      environment.
-
-
-
-
-## Extracting the promise expression (cont.)
-
+  * The environment is specified through the formal argument `env` (the default
+    is the current execution environment).
+  * If a symbol in the expression has a binding in the specified environment,
+    then it replaces the symbol with the value bound to the symbol in the
+    specified environment or list object.
+  * As a special case, if a given variable name is bound to an unevaluated
+    promise, then `substitute` returns the _expression_ associated with the
+    promise.
 
 ```{r}
-print_input <- function(x) {
-  substitute(x)
-}
-print_input(1 + 2 * 3)
+# non-promise object
+substitute(x + y, list(y = 11 + 22))
+
+# promise object
+f <- function(x) substitute(x + y)
+f(11 + 22)
 ```
+
+
+
+
+## Extracting promise expressions in rlang
+
+  * `rlang::enexpr` obtains the promise expression of a given argument.
+  * `rlang::enexprs` returns a list with each element the promise expression
+    corresponding to an argument passed to `...`.
+
+Base R doesn't have an equivalent to `rlang::enexprs`, but Advanced R suggests
+the clever hack `as.list(substitute(...()))`.  Also see `match.call` to obtain
+the entire function call.
+
+
+
+
 
 
 
