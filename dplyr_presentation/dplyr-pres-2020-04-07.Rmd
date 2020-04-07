@@ -483,6 +483,8 @@ TODO
 
 # Environments
 
+## Environments overview
+
 Environments are a data structure that are used by R to implement lexical
 scoping.
 
@@ -524,7 +526,7 @@ The _promise_ type has the following characteristics.
     * The environment in which to evaluate the expression.
     * The value obtained by evaluating the expression (initially empty).
   * The value of the promise is calculated the first time it is needed, and not
-    before.  After calculation the value is stored.
+    before.  Once calculated, the value is stored.
   * Subsequent uses of the variable use the stored value.
 
 
@@ -569,6 +571,35 @@ the entire function call.
 
 
 
+
+# Quasiquotation
+
+## Quasiquotation overview
+
+Quasiquotation (sometimes known as backquoting) is the ability to quote an
+expression, but selectively evaluate portions of an expression.
+
+  * Suppose we know the form of the expression but there are some parts that are
+    not known in advance.
+  * `bquote` takes an expression and replaces any terms of the form
+    `.(mysymbol)` with the result of evaluating the expression inside the
+    parentheses.
+
+```{r}
+a <- 2
+b <- 3
+bquote(f(.(a) * x, .(b) * y))
+```
+
+
+```{r}
+z <- 22
+f <- function(x) {
+  z <- 33
+  qoute_x <- rlang::expr(x)
+  rlang::expr(!!x + 2)
+}
+```
 
 
 
