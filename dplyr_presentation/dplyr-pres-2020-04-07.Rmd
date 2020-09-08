@@ -1,5 +1,6 @@
 ---
-title: dplyr Overview Part 2
+title: "The foundations of tidy evaluation"
+subtitle: "metaprogramming, lazy evaluation, and first-class environments"
 author: David Pritchard
 date: April 7, 2020
 output:
@@ -55,6 +56,21 @@ suppressWarnings(suppressMessages(library(dplyr)))
 
 # Motivation
 
+## Additional resources
+
+The material in these slides is in large part based on the following references.
+
+  * Wickham, Advanced R 2nd Edition, Chapters 7 and Chapters 17-21.
+  * Chambers, Software for Data Analysis, Chapter 13 and Appendix A.
+  * R Core Team, R Language Definition, Chapter 2 and Chapter 6.
+  * R Core Team, R Internals, Section 1.1.
+  * Ihaka, R: Past and Future History.
+    https://www.stat.auckland.ac.nz/~ihaka/downloads/Interface98.pdf
+  * Maechler, Language Objects in R.  https://rpubs.com/maechler/R_language_objs
+
+
+
+
 ## Motivating examples
 
 The R package dplyr is arguably one of the most valuable tools in the R
@@ -62,16 +78,18 @@ ecosystem.  dplyr makes use of a number of facilities in the R programming
 language to provide a high level of ergonomics.  Consider the following
 examples.
 
+  * In the first example, `wt` refers to a variable name in `mtcars`, while `z`
+    refers to a variable `y` that doesn't exist at call time.
+  * In the second example, the `select` function provides the user with a
+    domain-specific language that is used to remove any variables starting with
+    `"Petal"`.
+
 ```{r, results="hide"}
 library(dplyr)
+
 mutate(mtcars, y = 0.45 * wt, z = 1000 * y)
 select(iris, -starts_with("Petal"))
 ```
-
-In the first example, `wt` refers to a variable name in `mtcars`, while `z`
-refers to a variable `y` that doesn't exist at call time.  In the second
-example, the `select` function provides the user with a domain-specific language
-that is used to remove any variables starting with `"Petal"`.
 
 
 
@@ -156,42 +174,21 @@ interpreter as a tree-like data structure called an **abstract syntax tree**
 
 
 
+
 ## Abstract syntax tree example
 
-Consider the AST constructed from the expression `1 + 2 * 3`.  The AST has the
+Consider the AST constructed from the expression `f(1, g(7, 2))`.  The AST has the
 following form:
 
-  * The result of evaluating `+` on `1` and
-    * The result of evaluating `*` on `2` and `3`
+  * The result of evaluating `f` on `1` and
+    * The result of evaluating `g` on `7` and `2`
 
 The `lobstr::ast` function provides a visual representation of an AST
 constructed from an R statement.
 
 ```{r}
-library(lobstr)
-ast(1 + 2 * 3)
+lobstr::ast(f(1, g(7, 2)))
 ```
-
-
-
-
-## Why was S so closely modeled after Scheme?
-
-In 1986, the new version of S titled S3, in the words of John Chambers, featured
-
-> dynamically generated, self-describing objects and a strong (though not
-> strict) adherence to the ideas of functional programming.
-
-Chambers further writes that
-
-> The goal of functional programming has much in common with our _Prime
-> Directive_: to provide software that is understandable and as demonstrably
-> correct as possible.
-
-Given a lack of actual information regarding this topic, I delve into the realm
-of speculation to propose that Scheme was viewed as a paragon of a functional
-programming language, and is one that has thankfully stood up to the test of
-time.
 
 
 
@@ -238,7 +235,7 @@ R has also has related concepts of language objects and language data types, so
 let's get these terminologies straight as well.
 
   * A language object is an umbrella term referring to an object that is either
-    a call, expression, or symbol.
+    a call, an expression vector, or a symbol.
     * `is.language` returns `TRUE` for any one of these three data types, and
       `FALSE` otherwise.
     * `typeof` may return `language` (see below), `expression`, or `symbol`,
@@ -333,14 +330,39 @@ a
 
 ## Lists of expressions with alist
 
-TODO
+The `alist` function is similar to `expression` function, but it produces a list of
+expressions instead of an expression vector.
+
+  * It is most commonly used for constructing the formal arguments for a
+    function.
+  * Unlike `list` it allows for empty arguments as inputs, which is useful for
+    constructing formal arguments without defaults.
+
+```{r}
+# note that second value is empty
+alist(x = 2, y = )
+is.list(alist(x = 2, y = ))
+```
 
 
 
 
 ## Constructing text from an expression
 
-TODO: deparse
+The `deparse` function is a near-inverse for `parse(text = "somestring")`, as it
+translates expressions into text.
+
+  * It is only a near inverse, because non-significant whitespace is lost.
+  * This is often useful for providing informative error messages.
+
+```{r}
+# x is bound to an expression that was passed by the user to your
+# function
+x <- quote(10 - 5 * 4)
+cat("the value of '", deparse(x), "' must be nonnegative", sep = "")
+```
+
+
 
 
 
@@ -370,17 +392,18 @@ identical(z, zz)
 ## Evaluating expressions
 
 You can use `eval` to evaluate an expression or expression vector.
+
+  * It is interesting to note that in most languages, `eval` takes a string as
+    input.
+  * Since the elements of the AST are exposed to the user in R, `eval` operates
+    on them directly.
+
 ```{r}
 eval(parse(text = "x <- 2; x * x"))
 eval(1)
 eval(quote(mean(seq(1, 101))))
 eval(quote(x))
 ```
-
-  * It is interesting to note that in most languages, `eval` takes a string as
-    input.
-  * Since the elements of the AST are exposed to the user in R, `eval` operates
-    on them directly.
 
 
 
@@ -467,14 +490,42 @@ mode(x)
 
 ## Constructing calls
 
-TODO
+R provides facilities for constructing a call object by using the `call` function.
+
+  * This provides a more flexible alternative to quoting a call expression.
+  * rlang provides similar functionality with added conveniences with `call2`.
+
+```{r}
+gcall <- call("g", 7, 2)
+call("f", 1, gcall)
+
+# can also provide a symbol or the function object itself for the first
+# argument, amoong other features
+rlang::call2("f", gcall)
+```
 
 
 
 
 ## Formulas: a most useful type of call
 
-TODO
+A really interesting and critical part of the R ecosystem are formulas, which it
+turns out are actually call objects.
+
+  * They are afforded a special read syntax with `~` by the language, which
+    makes for an extremely readable and concise expression in modeling
+    functions, such as in e.g. `lm(mpg ~ hp + wt)` (and is co-opted by purrr to
+    enable concise anonymous functions).
+  * Formulas carry around the environment in which they are to be evaluated,
+    which is the motivation for rlang's quosure object (lots more on these in
+    the following presentation).
+    * In fact, quosures are subclassed from formulas.
+
+```{r}
+lobstr::ast(mpg ~ hp + wt)
+is.call(quote(mpg ~ hp + wt))
+str(mpg ~ hp + wt)
+```
 
 
 
@@ -576,30 +627,96 @@ the entire function call.
 
 ## Quasiquotation overview
 
-Quasiquotation (sometimes known as backquoting) is the ability to quote an
-expression, but selectively evaluate portions of an expression.
+Quasiquotation (sometimes known as backquotation) is the ability to quote an
+expression, but selectively evaluate portions of the expression.
 
-  * Suppose we know the form of the expression but there are some parts that are
-    not known in advance.
+  * The act of evaluating a portion of an expression is known as unquoting or
+    backquoting the sub-expression.
+  * This is useful when we know the form of the expression, but there are some
+    values that are not known in advance.
   * `bquote` takes an expression and replaces any terms of the form
-    `.(mysymbol)` with the result of evaluating the expression inside the
+    `.(myexpression)` with the result of evaluating the expression inside the
     parentheses.
 
 ```{r}
 a <- 2
 b <- 3
-bquote(f(.(a) * x, .(b) * y))
+bquote(f(.(a + 4) * x, .(b) * y))
 ```
 
+
+
+
+## Quasiquotation in rlang
+
+The rlang library provides its own special support for quasiquotation using the
+`!!` unquote operator (bang-bang) and `!!!` the unqoute-splice operator
+(bang-bang-bang or triple-bang).
+
+  * These are not true operators because they are not built into the language,
+    and in fact are just sequences of consecutive `!` operators.
+  * However, functions that support tidy evaluation will traverse an expression
+    and recognize such sequences of `!` operators and treat them specially.
 
 ```{r}
-z <- 22
-f <- function(x) {
-  z <- 33
-  qoute_x <- rlang::expr(x)
-  rlang::expr(!!x + 2)
-}
+a <- 2 + 4
+b <- 3
+f2 <- rlang::expr(g(7, 2))
+rlang::expr(f(!! a, !! b))
+rlang::expr(f(!! a, !! f2))
 ```
+
+
+## Quasiquotation in rlang (cont.)
+
+The `!!!` operator enables you to insert multiple sub-expressions into an
+expression.
+
+  * The `!!` operator is a one-to-one replacement, while the `!!!` is a
+    many-to-one replacement.
+
+```{r}
+x1 <- rlang::expr(f(1, "two", 3L))
+lobstr::ast(!! x1)
+
+y <- rlang::exprs("six", "SEVEN", 8i)
+x2 <- rlang::expr(f(1, !!! y, 3L))
+lobstr::ast(!! x2)
+```
+
+
+# Further discussion in nsCoders
+
+## Programming with quosures
+
+In the following nsCoders session, Bradley is going to present on quosures,
+which are another data structure with special behavior in tidy evaluation.
+
+  * Thank you
+
+
+
+
+
+
+
+<!-- ```{r} -->
+<!-- z <- 22 -->
+<!-- f <- function(x) { -->
+<!--   f2 <- function(y) { -->
+<!--     # rlang::expr(!!y + 2) -->
+<!--     rlang::expr(!!y + 2) -->
+<!--   } -->
+<!--   z <- 33 -->
+<!--   quote_x <- rlang::enexpr(x) -->
+<!--   rlang::expr(!!quote_x + 99) -->
+<!-- } -->
+<!-- g <- function(x) { -->
+<!--   z <- 33 -->
+<!--   qoute_x <- rlang::enquo(x) -->
+<!--   rlang::expr(!!x + 2) -->
+<!-- } -->
+<!-- ``` -->
 
 
 
