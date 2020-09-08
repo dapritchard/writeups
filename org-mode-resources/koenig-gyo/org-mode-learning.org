@@ -1,0 +1,59 @@
+#+TITLE: Learning Org mode
+
+* Resources
+
+- The Org mode manual: https://orgmode.org/org.html.
+- Collection of other useful links https://orgmode.org/worg/.
+- Rainer König's org mode presentations on YouTube at
+  https://www.youtube.com/playlist?list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE.
+- Derek Taylor's /Org Mode Basics In Doom Emacs/ video on YouTube: https://youtu.be/34zODp_lhqg.
+
+* Doom keybindings
+
+To see the full list of keybindings, as usual you can use =describe-mode= (=C h
+m=).
+
+It is worth noting that the usual outline commands such as =outline-promote= and
+=outline-demote= (and found in the =g= prefix) are remapped to Org mode specific
+commands.
+
+- Prefix keys
+  - =SPC m= prefixes Org-specific bindings.
+  - =z= has additional commands.
+  - =g= has outline movements such as =g j= and =g k=.
+- Top-level bindings
+  - =C-return= to add a header or item (context-sensitive) at the current level.
+  - =M-return= to add a header at the current level.
+  - =C-k= and =C-j= to move up/down the headers at the same level.
+  - =M-h= and =M-l= to promote/demote headers or list elements.
+  - =M-k= and =M-j= to move up/down headers or list elements.
+  - =M-K= and =M-J= to move up/down a single header or list element.
+  - =v a e= and =d a e= to select/delete an element.
+  - =v a R= and =d a R= to select/delete a subtree.
+  - =S-<left>= or =S-<right>= (i.e. shift left/right arrow) toggles to-do items.
+    Alternatively, you can use the =SPC m t= prefix to add a to-do state.
+
+* Org for GDT
+
+Resources:
+- A collection of links related to Org for GTD:
+  https://orgmode.org/worg/org-gtd-etc.html.
+- A Reddit thread with some useful comments and links to other resources:
+  https://www.reddit.com/r/emacs/comments/i09ncw/discussion_using_emacsorgmode_to_manage_life/.
+- Nicolas Petton's /Orgmode for GTD/:
+  https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html.
+- Tasshin Fogleman's /Plan Your Day: Daily Time Management with Emacs, Org-Mode,
+  and Google Calendar/.
+  https://tasshin.com/blog/plan-your-day-daily-time-management-with-emacs-org-mode-and-google-calendar/
+- Charles Cave's /How I use Emacs and Org-mode to implement GTD/:
+  http://members.optusnet.com.au/~charles57/GTD/gtd_workflow.html
+
+
+** Getting things done summaries
+
+- Erlend Hamburg's /GTD in 15 minutes - A Pragmatic Guide to Getting Things
+  Done/: https://hamberg.no/gtd.
+
+Maybe?
+ - https://lifehacker.com/productivity-101-a-primer-to-the-getting-things-done-1551880955
+ - https://joshkaufman.net/getting-things-done/
