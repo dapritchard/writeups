@@ -103,7 +103,23 @@ date.
 
 ** E01S05: Checklists
 
+This video is about checkboxes, which allow you to essentially add a radio
+button (i.e. a toggle) to a list item indicating whether the item has been
+completed. As noted in the Org manual, checkboxes are similar to TODO items but
+are aren't included in the global TODO list, which makes them convenient to use
+to split a task into a number of smaller steps.
+
+- A given item in a list can be made into a checkbox item by adding =[ ]= after
+  the list starting string (e.g. =- [ ]= or =1. [ ]=). Use =SPC u g r= to toggle
+  the presence of a checkbox.
+- If the item is completed then you can mark a given checkbox as completed by
+  replacing =[ ]= with e.g. =[-]= or =[X]=. Use =g r= to toggle the completion
+  state of a given checkbox.
+- Place =[/]= or =[%]= before a list to obtain a running tally indicating how
+  many tasks have been completed in a list. The former gives you a count such as
+  e.g. =[2/4]=, while the latter gives you a percentage such as =[50%]=
+
 *** Relevant links:
 
 - Rainer's video: https://www.youtube.com/watch?v=gvgfmED8RD4&list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE&index=5.
-
+- The Org Manual Checkboxes: https://orgmode.org/manual/Checkboxes.html
