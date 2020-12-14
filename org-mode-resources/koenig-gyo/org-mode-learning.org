@@ -8,78 +8,6 @@
   https://www.youtube.com/playlist?list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE.
 - Derek Taylor's /Org Mode Basics In Doom Emacs/ video on YouTube: https://youtu.be/34zODp_lhqg.
 
-* Doom keybindings
-
-To see the full list of keybindings, as usual you can use =describe-mode= (=C h
-m=).
-
-It is worth noting that the usual outline commands such as =outline-promote= and
-=outline-demote= (and found in the =g= prefix) are remapped to Org mode specific
-commands.
-
-- Prefix keys
-  - =SPC m= prefixes Org-specific bindings.
-  - =z= has additional commands.
-  - =g= has outline movements such as =g j= and =g k=.
-- Top-level bindings
-  - =C-return= to add a header or item (context-sensitive) at the current level.
-  - =M-return= to add a header at the current level.
-  - =C-k= and =C-j= to move up/down the headers at the same level.
-  - =M-h= and =M-l= to promote/demote headers or list elements.
-  - =M-k= and =M-j= to move up/down headers or list elements.
-  - =M-K= and =M-J= to move up/down a single header or list element.
-  - =v a e= and =d a e= to select/delete an element.
-  - =v a R= and =d a R= to select/delete a subtree.
-  - =S-<left>= or =S-<right>= (i.e. shift left/right arrow) toggles to-do items.
-    Alternatively, you can use the =SPC m t= prefix to add a to-do state.
-
-
-** Rainer König's org mode presentations on YouTube
-
-When in org-mode, the usual mode-specific top-level prefix is =SPC m=.
-
-*** EO1S03: Schedule, deadline, and agenda view
-
-See https://www.youtube.com/watch?v=IofHvutUWV0&list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE&index=3&t=3s.
-
-Use =SPC m d= to activate the date/deadline prefix.
-
-- =SPC m d s= (=org-schedule=) invokes a pop-up buffer with a calendar
-  representation that allows you to schedule a start date for your item. Using
-  the =C-h=, =C-j=, =C-k=, and =C-l= keys allows you to navigate the calendar,
-  and you can press enter to pick a date.
-- =SPC m d d= invokes a pop-up calendar buffer as with =org-schedule=, but for a
-  deadline date instead.
-- =SPC n a= or =SPC o A= or =SCP o a a= (=org-agenda=) invokes a pop-up that
-  allows you to view a agenda or list of =TODO= items.
-
-
-*** E01S04: Repeating tasks
-
-This video is about scheduling recurring tasks, such as for example adding a
-weekly task to mow the lawn. In the timestamp field you can add a so-called
-repeater element that might look like e.g. =+1m=, with the meaning that the task
-has is intended to be completed every 1-month interval after the original date.
-
-There are other forms for the repeater element. One is a form such as e.g.
-=++1m= which means that if a task is overdue by multiple scheduled events and
-you complete the task, that the next scheduled task is moved forward enough to
-be in the future. Another is a form such as e.g. =.+1m= which means that if a
-task is completed then another task is scheduled one week after the completion
-date.
-
-**** Relevant links:
-
-- Rainer's video: https://www.youtube.com/watch?v=nbC-gL5wcf4&list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE&index=4.
-- The Org Manual Repeated Tasks: https://orgmode.org/manual/Repeated-tasks.html.
-
-
-*** E01S05: Checklists
-
-**** Relevant links:
-
-- Rainer's video: https://www.youtube.com/watch?v=gvgfmED8RD4&list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE&index=5.
-
 * Org for GDT
 
 Resources:
@@ -106,3 +34,76 @@ Resources:
 Maybe?
  - https://lifehacker.com/productivity-101-a-primer-to-the-getting-things-done-1551880955
  - https://joshkaufman.net/getting-things-done/
+
+* Doom keybindings
+
+To see the full list of keybindings, as usual you can use =describe-mode= (=C h
+m=).
+
+It is worth noting that the usual outline commands such as =outline-promote= and
+=outline-demote= (and found in the =g= prefix) are remapped to Org mode specific
+commands.
+
+- Prefix keys
+  - =SPC m= prefixes Org-specific bindings.
+  - =z= has additional commands.
+  - =g= has outline movements such as =g j= and =g k=.
+- Top-level bindings
+  - =C-return= to add a header or item (context-sensitive) at the current level.
+  - =M-return= to add a header at the current level.
+  - =C-k= and =C-j= to move up/down the headers at the same level.
+  - =M-h= and =M-l= to promote/demote headers or list elements.
+  - =M-k= and =M-j= to move up/down headers or list elements.
+  - =M-K= and =M-J= to move up/down a single header or list element.
+  - =v a e= and =d a e= to select/delete an element.
+  - =v a R= and =d a R= to select/delete a subtree.
+  - =S-<left>= or =S-<right>= (i.e. shift left/right arrow) toggles to-do items.
+    Alternatively, you can use the =SPC m t= prefix to add a to-do state.
+
+
+* Rainer König's org mode presentations on YouTube
+
+When in org-mode, the usual mode-specific top-level prefix is =SPC m=.
+
+** EO1S03: Schedule, deadline, and agenda view
+
+See https://www.youtube.com/watch?v=IofHvutUWV0&list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE&index=3&t=3s.
+
+Use =SPC m d= to activate the date/deadline prefix.
+
+- =SPC m d s= (=org-schedule=) invokes a pop-up buffer with a calendar
+  representation that allows you to schedule a start date for your item. Using
+  the =C-h=, =C-j=, =C-k=, and =C-l= keys allows you to navigate the calendar,
+  and you can press enter to pick a date.
+- =SPC m d d= invokes a pop-up calendar buffer as with =org-schedule=, but for a
+  deadline date instead.
+- =SPC n a= or =SPC o A= or =SCP o a a= (=org-agenda=) invokes a pop-up that
+  allows you to view a agenda or list of =TODO= items.
+
+
+** E01S04: Repeating tasks
+
+This video is about scheduling recurring tasks, such as for example adding a
+weekly task to mow the lawn. In the timestamp field you can add a so-called
+repeater element that might look like e.g. =+1m=, with the meaning that the task
+has is intended to be completed every 1-month interval after the original date.
+
+There are other forms for the repeater element. One is a form such as e.g.
+=++1m= which means that if a task is overdue by multiple scheduled events and
+you complete the task, that the next scheduled task is moved forward enough to
+be in the future. Another is a form such as e.g. =.+1m= which means that if a
+task is completed then another task is scheduled one week after the completion
+date.
+
+*** Relevant links:
+
+- Rainer's video: https://www.youtube.com/watch?v=nbC-gL5wcf4&list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE&index=4.
+- The Org Manual Repeated Tasks: https://orgmode.org/manual/Repeated-tasks.html.
+
+
+** E01S05: Checklists
+
+*** Relevant links:
+
+- Rainer's video: https://www.youtube.com/watch?v=gvgfmED8RD4&list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE&index=5.
+
