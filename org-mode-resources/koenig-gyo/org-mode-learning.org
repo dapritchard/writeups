@@ -100,7 +100,6 @@ date.
 - Rainer's video: https://www.youtube.com/watch?v=nbC-gL5wcf4&list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE&index=4.
 - The Org Manual Repeated Tasks: https://orgmode.org/manual/Repeated-tasks.html.
 
-
 ** E01S05: Checklists
 
 This video is about checkboxes, which allow you to essentially add a radio
@@ -122,4 +121,31 @@ to split a task into a number of smaller steps.
 *** Relevant links:
 
 - Rainer's video: https://www.youtube.com/watch?v=gvgfmED8RD4&list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE&index=5.
-- The Org Manual Checkboxes: https://orgmode.org/manual/Checkboxes.html
+- The Org Manual Checkboxes: https://orgmode.org/manual/Checkboxes.html.
+
+** E02S01: Tags
+
+This video is about tags, which are a mechanism for assigning labels to
+headlines that can then be used to create cross-reference information according
+to their tags (recall that headlines are what Org calls the lines starting with
+=*=, =**=, etc. that define the document sections and subsections).
+
+- The tags are creating by placing a word surrounded by colons such as =:work:=
+  at the end of a headline.
+- Multiple tags take the form =:work:urgent:=.
+- Tags are inherited hierarchically (a child section recursively inherits tags
+  from its parent).
+- Use =SPC m q= (=counsel-org-tag=) to create a tag. Note that the interface
+  provided by the =counsel-org-tag= is different than the one shown in the
+  video.
+  - You can build up a collection of tags through multiple invocations of
+    =counsel-org-tag=.
+  - Select a tag that is already part of the headline definition to remove it.
+  - Use =C-M-m= to make multiple selections (see the link below for more
+    details).
+
+*** Relevant links:
+
+- Rainer's video: https://youtu.be/GcUVvlClo9k.
+- The Org Manual Tags: https://orgmode.org/manual/Tags.html.
+- Swiper key bindings for multiple selections and actions: http://oremacs.com/swiper/#key-bindings-for-multiple-selections-and-actions-keep-minibuffer-open.
