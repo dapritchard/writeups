@@ -149,3 +149,43 @@ to their tags (recall that headlines are what Org calls the lines starting with
 - Rainer's video: https://youtu.be/GcUVvlClo9k.
 - The Org Manual Tags: https://orgmode.org/manual/Tags.html.
 - Swiper key bindings for multiple selections and actions: http://oremacs.com/swiper/#key-bindings-for-multiple-selections-and-actions-keep-minibuffer-open.
+
+** E02S02: Agenda view
+
+*** Relevant links
+
+- Rainer's video: https://youtu.be/GcUVvlClo9k.
+- The Org Manual Agenda Dispatcher:
+  https://orgmode.org/manual/Agenda-Dispatcher.html#Agenda-Dispatcher.
+
+*** Video content
+
+This video is about the Agenda view, which is a way of constructing a new buffer
+with (a possibly filtered) set of the TODO items for a given buffer.
+
+- This video references Follow mode, which is toggled using
+  =org-agenda-follow-mode=. The usual keybinding for this is =F=, but in Doom
+  Emacs this is of course shadowed by =evil-find-char-backward= and there
+  isn't another keybinding provided for it.
+- Org Timeline is referred to in the video but as of Org 9.1 this feature has
+  been removed. The following note is provided in
+  https://www.orgmode.org/Changes_old.html.
+  #+BEGIN_QUOTE
+  Use a custom agenda view, possibly narrowed to current buffer to achieve a
+  similar functionality.
+   #+END_QUOTE
+- =SPC n a= followed by =t= opens a list of all open TODO items.
+  - There are instructions at the top of the agenda buffer for narrowing the
+    type of TODO items.
+  - Note that the resulting list includes the general class of "TODO"s, i.e.
+    any items labeled with any of the TODO keywords that you have defined.
+- =SPC n a= followed by =T= opens a list of all open TODO items narrowed to a
+  certain keyword or keywords (use the =|= operator to construct a logical
+  =OR= similar in spirit to how you would do with a regular expression).
+- =SPC n a= followed by =M= opens a list of all open TODO items narrowed to a
+  certain keyword or keywords.
+  - There are instructions at the top of the agenda buffer for changing the
+    search string (but note that in normal mode in Doom Emacs rather than the
+    directed =C-u r= you want to use =SPC u r=).
+  - If you want to match a certain tag among the TODOs with a certain keyword
+    then you can use syntax of the form =TAGLABEL/KEYWORDLABEL=.
