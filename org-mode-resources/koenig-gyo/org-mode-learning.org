@@ -189,3 +189,23 @@ with (a possibly filtered) set of the TODO items for a given buffer.
     directed =C-u r= you want to use =SPC u r=).
   - If you want to match a certain tag among the TODOs with a certain keyword
     then you can use syntax of the form =TAGLABEL/KEYWORDLABEL=.
+
+** E02S03: Customized agenda views
+
+*** Relevant links
+
+- Rainer's video: https://youtu.be/PJ3qHIl-eOM.
+- The Org Manual Custom Agenda Views:
+  https://orgmode.org/manual/Custom-Agenda-Views.html#Custom-Agenda-Views.
+- Worg's Custom Agenda Commands.
+- The documentation for the variable =org-agenda-custom-commands=.
+- Aaron Bieber's /An Agenda for Life With Org Mode/.
+
+*** Video content
+
+This video is about custom Agenda views, which allow you to customize how Agenda
+performs its searches and displays the results.
+
+- In the video the Emacs customization interface is used, but if you want to
+  create the custom org agendas pragmatically then the links above should
+  provide plenty of information about how to do so.
