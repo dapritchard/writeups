@@ -3,7 +3,8 @@
 * Resources
 
 - The Org mode manual: https://orgmode.org/org.html.
-- Collection of other useful links https://orgmode.org/worg/.
+- A collection of other useful resources https://orgmode.org/worg/. In particular,
+  see the /Org-mode tutorials/ page.
 - Rainer König's org mode presentations on YouTube at
   https://www.youtube.com/playlist?list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE.
 - Derek Taylor's /Org Mode Basics In Doom Emacs/ video on YouTube: https://youtu.be/34zODp_lhqg.
@@ -18,8 +19,8 @@ Resources:
 - Nicolas Petton's /Orgmode for GTD/:
   https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html.
 - Tasshin Fogleman's /Plan Your Day: Daily Time Management with Emacs, Org-Mode,
-  and Google Calendar/.
-  https://tasshin.com/blog/plan-your-day-daily-time-management-with-emacs-org-mode-and-google-calendar/
+  and Google Calendar/:
+  https://tasshin.com/blog/plan-your-day-daily-time-management-with-emacs-org-mode-and-google-calendar/.
 - Charles Cave's /How I use Emacs and Org-mode to implement GTD/:
   http://members.optusnet.com.au/~charles57/GTD/gtd_workflow.html
 - Jethro Kuan's /Org-mode Workflow/:
@@ -195,11 +196,12 @@ with (a possibly filtered) set of the TODO items for a given buffer.
 *** Relevant links
 
 - Rainer's video: https://youtu.be/PJ3qHIl-eOM.
+- The documentation for the variable =org-agenda-custom-commands=.
+- Worg's Custom Agenda Commands.
+- Aaron Bieber's /An Agenda for Life With Org Mode/:
+  https://blog.aaronbieber.com/2016/09/24/an-agenda-for-life-with-org-mode.html.
 - The Org Manual Custom Agenda Views:
   https://orgmode.org/manual/Custom-Agenda-Views.html#Custom-Agenda-Views.
-- Worg's Custom Agenda Commands.
-- The documentation for the variable =org-agenda-custom-commands=.
-- Aaron Bieber's /An Agenda for Life With Org Mode/.
 
 *** Video content
 
@@ -207,5 +209,5 @@ This video is about custom Agenda views, which allow you to customize how Agenda
 performs its searches and displays the results.
 
 - In the video the Emacs customization interface is used, but if you want to
-  create the custom org agendas pragmatically then the links above should
+  create the custom Org agendas pragmatically then the links above should
   provide plenty of information about how to do so.
