@@ -66,6 +66,22 @@ commands.
 
 When in org-mode, the usual mode-specific top-level prefix is =SPC m=.
 
+** E01S01: Headlines and outline mode
+
+*** Relevant links
+
+- Rainer's video:
+
+*** Video content
+
+** E01S02: TODO keywords
+
+*** Relevant links
+
+- Rainer's video:
+
+*** Video content
+
 ** EO1S03: Schedule, deadline, and agenda view
 
 See https://www.youtube.com/watch?v=IofHvutUWV0&list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE&index=3&t=3s.
@@ -255,10 +271,14 @@ a new section in the document).
 - Rainer's video: https://youtu.be/5M8L7vtWY1k.
 - The Org Manual Archiving: https://orgmode.org/manual/Archiving.html.
 
-** Video content
+*** Video content
 
-- Archiving means moving content (more precisely, an Org subtree) from one file
-  to another.
+Archiving means moving content (more precisely, an Org subtree) from one file to
+another. A typical use-case is to remove a task once it has been completed from
+your main file into an archive file. This is useful to stop such tasks from
+contributing to your agenda view in your active to-do list and to keep view
+compilations fast.
+
 - A file can be specified where archived content will be stored.
   - The location of the archive is specified via the =org-archive-location=
     variable (see the variable documentation for details).
@@ -281,3 +301,42 @@ a new section in the document).
   archive them (after getting confirmation from the user for each tree).
   - Note that there's also a double-prefix variant that's not mentioned in the
     video (see the function documentation for further information).
+
+** E03S01: Automatic logging of status changes
+
+*** Relevant links
+
+- Rainer's video: https://youtu.be/R4QSTDco_w8.
+- The Org Manual Tracking TODO state changes:
+  https://orgmode.org/manual/Tracking-TODO-state-changes.html#Tracking-TODO-state-changes.
+
+*** Video content
+
+This video is about configuring automatic logging of status changes. For
+example, whenever you move from =WAITING= to =TODO=, you might want to record a
+timestamp so that you know how long a task has actually been actionable for you.
+
+- When defining your TODO states (as described in E01S02), you can add some
+  additional syntax to record a timestamp and optionally an accompanying note
+  whenever a TODO state change occurs.
+- Use =!= (as in =DONE(d!)=) to record just a timestamp when entering a given
+  state.
+- Use =@= (as in =CANCELED(c@)=) to record a timestamp plus a note when entering
+  a given state.
+- You can optionally include a =/= (as in =WAIT(w@/!)= or =WAIT(w/!)=) to
+  separate enter-state from exit-state transitions.
+  - Use the =!= or =@= symbols after the slash refer to exit state transitions.
+    These have effect if and only if the target state does not configure logging
+    for entering it.
+  - So =WAIT(w@/!)= means to record a timestamp plus a note when entering a
+    given state, and additionally to record a timestamp whenever leaving the
+    state (for states that don't already have an enter-state transition defined
+    (as in =DONE(d)=).
+  - So =WAIT(w/!)= means that no logging is configured for whenever the =WAIT=
+    state is entered, but that a timestamp is recorded whenever leaving the
+    state (for states that don't already have an enter-state transition defined
+    (as in =DONE(d)=).
+- Use the variable =org-log-done= to provide a global setting for entering a
+  =DONE= state.
+- Use the variable =org-log-reschedule= to configure adding a timestamp or
+  timestamp with note whenever the scheduling date of a task is modified.
