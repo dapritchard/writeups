@@ -209,5 +209,75 @@ This video is about custom Agenda views, which allow you to customize how Agenda
 performs its searches and displays the results.
 
 - In the video the Emacs customization interface is used, but if you want to
-  create the custom Org agendas pragmatically then the links above should
+  create the custom Org agendas programatically then the above links should
   provide plenty of information about how to do so.
+
+** E02S04: Drawers, logging, and quick notes
+
+*** Relevant links
+
+- Rainer's video: https://youtu.be/nUvdddKZQzs.
+- The Org Manual Drawers: https://orgmode.org/manual/Drawers.html.
+
+*** Video content
+
+This video is about drawers and logging notes into drawers. Drawers provide a
+way to store information for a given task that is by default not displayed on
+the screen. This functionality is similar to changing the outline visibility,
+but without having to change the document structure (i.e. without having to add
+a new section in the document).
+ 
+- Start a line with text of the form =:DRAWERNAME:= followed by another line
+  starting with =:END:= (with both lines adhering the current level of
+  indentation) to create a drawer. Note that the drawer names =:LOGBOOK:= and
+  =:PROPERTIES:= have special meaning.
+- The string used to declare the start of the drawer doesn't have any
+  significance except as a clue to the reader as to what drawer contains (with
+  the exception of the aforementioned "special" drawers) .
+- Drawers can contain anything but a headline or another drawer.
+- The text within a drawer is hidden by default. Press =TAB= while on the line
+  declaring the start of the drawer to toggle the visibility of the drawers.
+- Set =org-log-into-drawer= to a non-nil value to store various
+  timestamp-related information into per-task drawers.
+  - Setting =org-log-into-drawer= to =t= stores the information in a =:LOGBOOK:=
+    drawer, otherwise you can provide a string to specify the name of the drawer
+    to use.
+  - The advantage of enabling this setting is that otherwise the information is
+    stored as part of the task which can lead to a lot of visual clutter.
+  - See the Drawers section in the Org manual for exactly what timestamp-related
+    information is stored into the specified drawer.
+- Add a note for a given task by using =C-c C-z= (=org-log-into-drawer=).
+
+** E02S05: Archiving
+
+*** Relevant links
+
+- Rainer's video: https://youtu.be/5M8L7vtWY1k.
+- The Org Manual Archiving: https://orgmode.org/manual/Archiving.html.
+
+** Video content
+
+- Archiving means moving content (more precisely, an Org subtree) from one file
+  to another.
+- A file can be specified where archived content will be stored.
+  - The location of the archive is specified via the =org-archive-location=
+    variable (see the variable documentation for details).
+  - You can either specify a per-file archive or a global archive.
+  - Alternatively, you can provide an in-buffer specification by placing an
+    entry of the form =#+ARCHIVE myarchive.org::= at the top of the file.
+  - The double-colon in =myarchive.org::= is used to separate a filename from a
+    headline. The headline is where the archived content is to be stored, and if
+    it is omitted (as it is in this example), then the content is simply
+    appended to the end of the file.
+- Use =SPC m A= or =SPC m s A= (=org-archive-subtree=) to move the current
+  subtree to the archive.
+- In the video a second command is mentioned: the one described as "Archive an
+  entry" with keybinding =C-c C-x C-a=, which corresponds to
+  =org-archive-subtree-default=. However the =org-archive-subtree-default=
+  function uses a layer of indirection to allow you to provide a custom command,
+  which by default it simply calls =org-archive-subtree=.
+- Use a prefix argument with =org-archive-subtree= (e.g. =SPC u SPC m A=) to
+  walk through the file and find any trees without any open TODO items and
+  archive them (after getting confirmation from the user for each tree).
+  - Note that there's also a double-prefix variant that's not mentioned in the
+    video (see the function documentation for further information).
