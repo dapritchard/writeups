@@ -340,3 +340,45 @@ timestamp so that you know how long a task has actually been actionable for you.
   =DONE= state.
 - Use the variable =org-log-reschedule= to configure adding a timestamp or
   timestamp with note whenever the scheduling date of a task is modified.
+
+** E03S02: Splitting your system up to several files
+
+*** Relevant links
+
+- Rainer's video: https://youtu.be/ECWtf6mAi9k.
+- Org Manual Refile and Copy: https://orgmode.org/manual/Refile-and-Copy.html.
+- Org Manual Summary of In-Buffer Settings:
+  https://orgmode.org/manual/In_002dbuffer-Settings.html.
+
+*** Video content
+
+This video is about storing your Org content across multiple files, and
+copying/moving Org headline subtrees within and across files.
+
+- In the video, both of the example files have the same settings for the TODO
+  and tags definitions. Another approach is to extract these settings into a
+  separate file and point to it using the =#+SETUPFILE: file= setting (see the
+  above link for in-buffer settings for details).
+- In order to ensure that all of the desired files are considered for the agenda
+  views, the variable =org-agenda-files= needs to be set appropriately. In Doom
+  Emacs, this variable is set to the value of =(list org-directory)=, which
+  loosely stated means that all files in =org-directory= are considered for the
+  agenda views.
+- In order to use =org-refile= to move content across files, the variable
+  =org-refile-targets= needs to be set appropriately. In Doom Emacs this
+  variable is set to a value based on =org-agenda-files=, which loosely stated
+  has the effect of allowing you to refile either in the current buffer or into
+  any of the Org files in the =org-refile-targets= directory.
+- In order to be able to specify refile targets as paths, the variable
+  =org-refile-use-outline-path= needs to be set appropriately. In Doom Emacs
+  this variable is ='file= (the same as in the video), which allows you to
+  specify e.g. a level 1 headline using syntax of the form
+  =mylife.org/Examples=.
+- In order to allow the creation of new nodes when refiling content, the
+  variable =org-refile-allow-creating-parent-nodes= needs to be set to a non-nil
+  value. In particular, you can set it to ='confirm= to prompt the user for
+  confirmation before creating a new node.
+- =SPC m r r= or =SPC m s r= (=org-refile=) allows you to move a subtree to
+  another location.
+- =C-c M-w= (=org-refile-copy=) allows you to copy a subtree to another
+  location.
