@@ -60,6 +60,9 @@ commands.
   - =v a R= and =d a R= to select/delete a subtree.
   - =S-<left>= or =S-<right>= (i.e. shift left/right arrow) toggles to-do items.
     Alternatively, you can use the =SPC m t= prefix to add a to-do state.
+- Cycling visibility
+  - =z O= to show the entire subtree.
+  - =z k= to show the next level (but not further descendents) in the tree.
 
 
 * Rainer König's org mode presentations on YouTube
@@ -382,3 +385,39 @@ copying/moving Org headline subtrees within and across files.
   another location.
 - =C-c M-w= (=org-refile-copy=) allows you to copy a subtree to another
   location.
+
+** E03S03: The first capture template(s)
+
+*** Relevant links
+
+- Rainer's video: https://youtu.be/Af4NVJbNAB4.
+- Org Manual Capture templates:
+  https://orgmode.org/manual/Capture-templates.html.
+
+*** Video content
+
+This video is about Org which lets you quickly store notes with little
+interruption of your work flow. For example, if you are working on something and
+you get an idea about how to improve a related part of the project, then you can
+leave a note using a pop-up buffer describing your inspiration without having to
+leave what you are currently doing. You can create templates for creating such
+notes which help you fill in some of the relevant information.
+
+- In Doom Emacs keybindings for =org-capture= are already defined, so you don't
+  have to create your own (unless you want to). The default keybindings are =SPC
+  n n= and =SPC X=.
+- Org Capture templates are defined by the variable =org-capture-templates=.
+- The Org Capture templates allow you to define some text that will be provided
+  as a starting point when using =org-capture=.
+  - The templates can be provided as a string, a list containing a function
+    returning a string, or a list providing the location of a file containing
+    the template. In the video a separate file is shown as an example.
+  - There are a number of so-called %-escapes that are expanded if they are
+    included in the template definition. See the Org Manual or the
+    =org-capture-templates= documentation for details.
+  - In Doom Emacs there is a template for journal entries as is shown in the
+    video, and which can be accessed via e.g. =SPC n n= followed by =j=.
+  - The remainder of the video is describes a template which lists out a number
+    of steps that are performed during the weekly review. This would probably
+    want to be built up and customized for each individual based on their
+    specific needs.
