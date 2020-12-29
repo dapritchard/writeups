@@ -63,7 +63,9 @@ commands.
 - Cycling visibility
   - =z O= to show the entire subtree.
   - =z k= to show the next level (but not further descendents) in the tree.
-
+- Movement
+  - =] ]= to move to the next header regardless of level.
+  - =[ [= to move to the previous header regardless of level.
 
 * Rainer König's org mode presentations on YouTube
 
@@ -421,3 +423,51 @@ notes which help you fill in some of the relevant information.
     of steps that are performed during the weekly review. This would probably
     want to be built up and customized for each individual based on their
     specific needs.
+
+** E03S04: The PROPERTIES drawer
+
+*** Relevant links
+
+- Rainer's video: https://youtu.be/ABrv_vnVbkk.
+- Org Manual Properties and Columns:
+  https://orgmode.org/manual/Properties-and-Columns.html#Properties-and-Columns.
+- Org Manual Matching tags and properties:
+  https://orgmode.org/manual/Matching-tags-and-properties.html#Matching-tags-and-properties.
+- Org Manual Tracking TODO state changes:
+  https://www.gnu.org/software/emacs/manual/html_node/org/Tracking-TODO-state-changes.html.
+
+*** Video content
+
+This video is about creating properties for a given entry by using the
+=PROPERTIES= drawer. Properties are arbitrary key/value pairs that are typically
+used as a mechanism for filtering Agenda views, but there are also some property
+keys with special meaning that can be used to change certain Org's settings.
+
+- The =PROPERTIES= drawer stores task-specific settings and user defined
+  attributes.
+- The =PROPERTIES= drawer must immediately follow the headline (where the
+  headline is taken to include any deadline or scheduling information, if
+  applicable).
+- Property entries in general are arbitrary key/value pairs of the form
+  =:propertyname: value= (keys are case insensitive).
+- By default, properties are not inherited by subtrees, but this can be changed
+  by setting the value of =org-use-property-inheritance= to a non-nil value (see
+  the variable documentation for details).
+- One motivating use-case shown in the video is to turn off logging for a
+  specific task. This is achieved by adding a line =:LOGGING: nil= to the
+  =PROPERTIES= drawer. The syntax for this particular property is described in
+  the /Tracking TODO state changes/ section in the Org Manual.
+- You can create an agenda view based on a tag and/or property search using =SPC
+  n a= (=org-agenda=) followed by =m= (which calls =org-tags-view=).
+  - In the video, an exact match search is performed using syntax of the form
+    ~GENRE="adventure"~.
+  - Another example is shown in the video demonstrating how you can compare the
+    value of a property using syntax such as ~PAGES>200~. In general, if the
+    comparison value is a plain number then a numerical comparison is performed.
+  - When an entry doesn't have a particular property, then a default value is
+    provided. In the case of a numerical expression the default value is =0=.
+  - Another example is shown in the video where the search expression is
+    ~PAGES>0&PAGES<350~. In general, you can use Boolean logic to build up
+    complex expressions.
+  - There are also ways to build up searches using regular expressions. See the
+    above links for details.
