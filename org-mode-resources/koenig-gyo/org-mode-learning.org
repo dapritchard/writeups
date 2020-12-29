@@ -471,3 +471,24 @@ keys with special meaning that can be used to change certain Org's settings.
     complex expressions.
   - There are also ways to build up searches using regular expressions. See the
     above links for details.
+
+** E03S05: Archiving to different files
+
+*** Relevant links
+
+- Rainer's video: https://youtu.be/Y3g8d-IwIT4.
+- Org Manual Property Inheritance:
+  https://orgmode.org/manual/Property-Inheritance.html#Property-Inheritance.
+
+*** Video content
+
+This video is about using the =ARCHIVE= property to specify entry-specific
+archive file locations.
+
+- To specify an entry-specific archive file location, create a entry in the
+  =PROPERTIES= drawer of the form =:ARCHIVE: track-books.org::* Read books=.
+  - This has the meaning of saving archiving the entry to the =track-books.org=
+    file under the =* Read books= heading.
+- Note that while Org properties are not by default inherited from ancestral
+  nodes, there are a few properties which /are/ always inherited: =COLUMNS=,
+  =CATEGORY=, =ARCHIVE=, and =LOGGING=.
