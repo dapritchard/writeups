@@ -492,3 +492,49 @@ archive file locations.
 - Note that while Org properties are not by default inherited from ancestral
   nodes, there are a few properties which /are/ always inherited: =COLUMNS=,
   =CATEGORY=, =ARCHIVE=, and =LOGGING=.
+
+** E04S01: Ordered tasks
+
+*** Relevant links
+
+- Rainer's video: https://youtu.be/9hxEEbUWJYA.
+- Org Manual TODO dependencies:
+  https://orgmode.org/manual/TODO-dependencies.html#TODO-dependencies.
+
+*** Video content
+
+This video is about the =ORDERED= property, which indicates to Org that
+sub-entries of the task are intended to be completed in order. Org can be
+configured such that trying to change the TODO state of an entry to DONE will be
+blocked when using =org-todo= if it is in the wrong order.
+
+- The =ORDERED= property can be set for a given entry by adding the entry
+  =:ORDERED: t= to the =PROPERTIES= drawer.
+- You can use =C-c C-x o= (=org-toggle-ordered-property=) to toggle the
+  =ORDERED= property status.
+- If you set the variable =org-enforce-todo-dependencies= to a non-nil value,
+  then the following behaviors are enforced. Blocked here means changing the
+  TODO state via the =org-todo= function. This variable is set to =t= by default
+  in Doom Emacs.
+  - Undone TODO entries will block switching the parent to DONE.
+  - If a parent has an =ORDERED= property, switching an entry to DONE will be
+    blocked if any prior sibling is not yet done.
+  - If the parent is blocked because of ordered siblings of its own, the child
+    will also be blocked.
+- You can ensure an entry is never blocked (i.e. override the =ORDERED=
+  property) by adding a property of the form =:NOBLOCKING: t=.
+- If you want to make it easier to see which entries have an =ORDERED= property,
+  you can set the variable =org-track-ordered-property-with-tag= to a non-nil
+  value in order to add or remove a corresponding =ORDERED= tag when using
+  =org-toggle-ordered-property=. This variable is set to =nil= by default in
+  Doom Emacs.
+  - Note that the =ORDERED= tag doesn't is solely for the benefit of the user's
+    readability and does not influence behavior.
+- If you want to dim blocked tasks (i.e. change the font) in agenda views to
+  indicate that they are blocked, you can set =org-agenda-dim-blocked-tasks= to
+  a non-nil value (setting it to ='invisible= has a special meaning, see the
+  variable documentation for details). This variable is set to =t= by default in
+  Doom Emacs.
+- If you want unchecked checkboxes to block switching a parent to DONE, then you
+  can set the variable =org-enforce-todo-checkbox-dependencies= to a non-nil
+  value. This variable is set to =nil= by default in Doom Emacs.
