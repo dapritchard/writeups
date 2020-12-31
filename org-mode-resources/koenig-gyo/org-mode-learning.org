@@ -538,3 +538,66 @@ blocked when using =org-todo= if it is in the wrong order.
 - If you want unchecked checkboxes to block switching a parent to DONE, then you
   can set the variable =org-enforce-todo-checkbox-dependencies= to a non-nil
   value. This variable is set to =nil= by default in Doom Emacs.
+
+** E04S02: Timers
+
+*** Relevant links
+
+- Rainer's video: https://youtu.be/lxkPeJS6keY.
+- Org Manual Timers: https://orgmode.org/manual/Timers.html.
+
+*** Video content
+
+*** Making timer notifications work on macOS
+
+On my system (Emacs 26 with Org 9.4 on macOS Catalina 10.15.7) when the timer
+ran out I got an error when the timer ran out stemming from a call to
+=org-show-notification=.
+#+BEGIN_EXAMPLE
+dbus-call-method: peculiar error: "Emacs not compiled with dbus support"
+#+END_EXAMPLE
+Setting the variable =org-show-notification-handler= to a function has the
+effect of causing =org-show-notification= to use the specified function instead
+of trying to use the dbus interface. The following is a function definition
+=notify-macos= that uses AppleScript to send a system notification.
+
+#+BEGIN_SRC emacs-lisp
+;; The idea for this is taken from https://emacs.stackexchange.com/a/29713/15552
+;; Also see https://developer.apple.com/library/archive/documentation/LanguagesUtilities/Conceptual/MacAutomationScriptingGuide/DisplayNotifications.html
+(defun notify-macos (msg &optional title subtitle sound)
+  "Send a notification on a macOS system.
+Take a string MSG and optional strings TITLE, SUBTITLE, and SOUND
+as inputs, and send a system notification using AppleScript. If
+title is not provided, then the name of the Emacs application is
+used for the title."
+  ;; See the following link for the AppleScript display notification command.
+  ;;  https://developer.apple.com/library/archive/documentation/LanguagesUtilities/Conceptual/MacAutomationScriptingGuide/DisplayNotifications.html
+  (let* ((applescript-msg
+          (concat (notify-macos--create-element-str "display notification" msg)
+                  (notify-macos--create-element-str "with title" title)
+                  (notify-macos--create-element-str "subtitle" subtitle)
+                  (notify-macos--create-element-str "sound name" sound))))
+    (ns-do-applescript applescript-msg)))
+
+(defun notify-macos--create-element-str (command value)
+  "Concatenate inputs and wrap 2nd term in escaped quotes."
+  (if value
+      (concat command
+              " \""
+              (notify-macos--escape-special-chars value)
+              "\" ")
+    ""))
+
+(defun notify-macos--escape-special-chars (str)
+  "Create a string with escaped AppleScript special characters."
+  ;; the special characters that need to be escaped in AppleScript are \ and "
+  (replace-regexp-in-string "\\([\\\"]\\)" "\\\\\\1" str))
+#+END_SRC
+
+Then we can set =org-show-notification-handler= to a single-input function based
+on =notify-macos=.
+
+#+BEGIN_SRC emacs-lisp
+(setq org-show-notification-handler
+      (lambda (msg) (notify-macos msg "Org notification")))
+#+END_SRC
