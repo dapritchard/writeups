@@ -548,7 +548,32 @@ blocked when using =org-todo= if it is in the wrong order.
 
 *** Video content
 
-*** Making timer notifications work on macOS
+This video is about timers, which provide functionality to either count down
+from a time (this is probably the typical meaning of the word "timer"), or count
+up from a time (often called a "stopwatch"). The former is useful if you want to
+only allow yourself a fixed amount of time for a task, while the latter is
+useful if e.g. you want to take notes during a meeting (often called the meeting
+minutes).
+
+- Use =C-c C-x ;= (=org-timer-set-timer=) to set a countdown timer.
+  - A prompt asks how much time the timer is set for.
+  - A system notification is sent once the timer ends.
+- Use =C-c C-x ,= (=org-timer-pause-or-continue=) to alternatively pause or
+  resume a timer.
+- Use either =SPC u C-c C-x ,= or =C-c C-x _= (=org-timer-stop=) to stop (turn
+  off) a timer.
+- Use =C-c C-x 0= (=org-timer-start=) to start a relative timer (i.e. a timer
+  that counts up).
+  - Use a prefix value to start the timer from a different value than 0.
+- Use =C-x C-x .= (=org-timer=) to insert a H:MM:SS string from the timer into
+  the buffer.
+- Use =C-x C-x -= (=org-timer-item=) to insert a description-type item with the
+  current timer value.
+- Note that once you have started a list with timer values as is created by
+  =org-timer-item=, then using =C-RET= will automatically start a new list item
+  with the current timer value.
+
+*** Making timer notifications work on my macOS system
 
 On my system (Emacs 26 with Org 9.4 on macOS Catalina 10.15.7) when the timer
 ran out I got an error when the timer ran out stemming from a call to
