@@ -247,7 +247,7 @@ way to store information for a given task that is by default not displayed on
 the screen. This functionality is similar to changing the outline visibility,
 but without having to change the document structure (i.e. without having to add
 a new section in the document).
- 
+
 - Start a line with text of the form =:DRAWERNAME:= followed by another line
   starting with =:END:= (with both lines adhering the current level of
   indentation) to create a drawer. Note that the drawer names =:LOGBOOK:= and
@@ -626,3 +626,49 @@ on =notify-macos=.
 (setq org-show-notification-handler
       (lambda (msg) (notify-macos msg "Org notification")))
 #+END_SRC
+
+** E04S03: Clocking
+
+*** Relevant links
+
+- Rainer's video: https://youtu.be/uVv49htxuS8.
+- Org Manual Clocking:
+  https://orgmode.org/manual/Clocking-Work-Time.html#Clocking-Work-Time.
+
+*** Video content
+
+This video is about clocking, which is the process of recording when you work on
+your various tasks and how much time you spend on those tasks.
+
+- Setting the value of =org-clock-into-drawer= to a non-nil value has the
+  effect of placing clocking information into a drawer.
+  - Setting it to a string such as e.g. ="CLOCKING"= has the effect of of
+    placing into a drawer named =CLOCKING=.
+  - There are other values that can be provided for =org-clock-into-drawer= with
+    different semantics. See the variable documentation for details.
+- Use =SPC m c i= (=org-clock-in=) to start the clock (i.e. "clock in") for a
+  given task.
+  - Use a prefix argument (i.e. =SPC u SPC m c i=) to offer a list of recently
+    clocked tasks to clock into.
+- Use =SPC n o= or =SPC m c g= or =SPC m g c= (=org-clock-goto=) to move the
+  cursor to the headline of the currently clocked in task.
+- Use =SPC m c o= (=org-clock-out=) to stop the currently running clock (i.e.
+  "clock out").
+- If you manually edit the timestamp for a clock in / clock out pair, then you
+  can recompute the elapsed time by using =g r= (=org-ctrl-c-ctrl-c=).
+- Use =SPC n C= or =SPC m c c= (=org-clock-cancel=) to cancel the currently
+  running clock.
+- Use =SPC m c I= (=org-clock-in-last=) to clock in again for the most recently
+  started task.
+- You can interrupt a task by clocking in to a new task without closing the
+  current task.
+  - This adds a "clock out" timestamp to your current task, the same is if you
+    had explicitly clocked out.
+  - However, if after you complete the task that you switch to, you use =SPC u
+    SPC m c i=, then it will list the previous task at the top of the menu of
+    task choices, and pressing =i= will start the timer again for the
+    interrupted task.
+- Use =C-c C-x C-d= to temporarily display the total amount of time logged for a
+  given task.
+  - Either make an edit in the buffer, or use =g r= to remove the temporary
+    display.
