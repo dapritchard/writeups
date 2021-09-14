@@ -35,6 +35,7 @@ Resources:
 Maybe?
  - https://lifehacker.com/productivity-101-a-primer-to-the-getting-things-done-1551880955
  - https://joshkaufman.net/getting-things-done/
+ - https://www.asianefficiency.com/task-management/gtd-intro/
 
 * Doom keybindings
 
@@ -60,12 +61,38 @@ commands.
   - =v a R= and =d a R= to select/delete a subtree.
   - =S-<left>= or =S-<right>= (i.e. shift left/right arrow) toggles to-do items.
     Alternatively, you can use the =SPC m t= prefix to add a to-do state.
-- Cycling visibility
-  - =z O= to show the entire subtree.
-  - =z k= to show the next level (but not further descendents) in the tree.
+- Visibility
+  - =z o= to show the current fold's next level.
+  - =z O= to show the current fold's entire subtree.
+  - =z c= to hide the current fold.
+  - =z C= to hide the current subtree.
+  - =z r= to globally show an additional level of depth. In more detail, the
+    buffer has a sense of global depth and this command increments the depth
+    level and makes the visible depth of the entire buffer equal to this depth
+    level.
+  - =z R= to globally show all folds.
+  - =z m= to globally hide an additional level of depth. In more detail, the
+    buffer has a sense of global depth and this command decrements the depth
+    level and makes the visible depth of the entire buffer equal to this depth
+    level.
+  - =z M= to globally hide all folds.
 - Movement
-  - =] ]= to move to the next header regardless of level.
-  - =[ [= to move to the previous header regardless of level.
+  - =g j= to move to the next element at the same level, if one exists. If
+    there's no next element at the current level but there is a higher
+    (shallower) level then move to that.
+  - =g k= to move to the previous element at the same level, if one exists. If
+    there's no previous element at the current level but there is a higher
+    (shallower) level then move to that.
+  - =] ]= similar to =g j=, but behaves slightly differently for lists (it
+    visits each list element rather than skipping sublists).
+  - =[ [= similar to =g k=, but behaves slightly differently for lists (it
+    visits each list element rather than skipping sublists).
+  - =C-c C-n= to move to the next visible heading line.
+  - =C-c C-p= to move to the previous visible heading line.
+  - =] h= to move to the next visible heading line on the same level, if one
+    exists.
+  - =[ h= to move to the previous visible heading line on the same level, if one
+    exists.
 
 * Rainer König's org mode presentations on YouTube
 
@@ -179,16 +206,21 @@ to their tags (recall that headlines are what Org calls the lines starting with
 - Rainer's video: https://youtu.be/GcUVvlClo9k.
 - The Org Manual Agenda Dispatcher:
   https://orgmode.org/manual/Agenda-Dispatcher.html#Agenda-Dispatcher.
+- The Org Manual Matching Tags and Properties:
+  https://orgmode.org/manual/Matching-tags-and-properties.html#Matching-tags-and-properties.
+- The Org Manual Search View:
+  https://orgmode.org/manual/Search-view.html#Search-view. This shows the
+  available syntax of custom search strings.
 
 *** Video content
 
 This video is about the Agenda view, which is a way of constructing a new buffer
-with (a possibly filtered) set of the TODO items for a given buffer.
+with a (possibly filtered) set of the TODO items for a given buffer.
 
 - This video references Follow mode, which is toggled using
   =org-agenda-follow-mode=. The usual keybinding for this is =F=, but in Doom
-  Emacs this is of course shadowed by =evil-find-char-backward= and there
-  isn't another keybinding provided for it.
+  Emacs this is shadowed by =evil-find-char-backward= and there isn't another
+  keybinding provided for it.
 - Org Timeline is referred to in the video but as of Org 9.1 this feature has
   been removed. The following note is provided in
   https://www.orgmode.org/Changes_old.html.
@@ -210,7 +242,8 @@ with (a possibly filtered) set of the TODO items for a given buffer.
     search string (but note that in normal mode in Doom Emacs rather than the
     directed =C-u r= you want to use =SPC u r=).
   - If you want to match a certain tag among the TODOs with a certain keyword
-    then you can use syntax of the form =TAGLABEL/KEYWORDLABEL=.
+    then you can use syntax of the form =TAGLABEL/KEYWORDLABEL= (note that this
+    is syntactic sugar for the "matching tags and properties" syntax).
 
 ** E02S03: Customized agenda views
 
@@ -218,7 +251,8 @@ with (a possibly filtered) set of the TODO items for a given buffer.
 
 - Rainer's video: https://youtu.be/PJ3qHIl-eOM.
 - The documentation for the variable =org-agenda-custom-commands=.
-- Worg's Custom Agenda Commands.
+- Worg's Custom Agenda Commands:
+  https://orgmode.org/worg/org-tutorials/org-custom-agenda-commands.html.
 - Aaron Bieber's /An Agenda for Life With Org Mode/:
   https://blog.aaronbieber.com/2016/09/24/an-agenda-for-life-with-org-mode.html.
 - The Org Manual Custom Agenda Views:
@@ -398,7 +432,7 @@ copying/moving Org headline subtrees within and across files.
 
 *** Video content
 
-This video is about Org which lets you quickly store notes with little
+This video is about Org Capture, which lets you quickly store notes with little
 interruption of your work flow. For example, if you are working on something and
 you get an idea about how to improve a related part of the project, then you can
 leave a note using a pop-up buffer describing your inspiration without having to
@@ -406,8 +440,8 @@ leave what you are currently doing. You can create templates for creating such
 notes which help you fill in some of the relevant information.
 
 - In Doom Emacs keybindings for =org-capture= are already defined, so you don't
-  have to create your own (unless you want to). The default keybindings are =SPC
-  n n= and =SPC X=.
+  have to create your own as in the video, unless you want to. The default
+  keybindings are =SPC n n= and =SPC X=.
 - Org Capture templates are defined by the variable =org-capture-templates=.
 - The Org Capture templates allow you to define some text that will be provided
   as a starting point when using =org-capture=.
@@ -672,3 +706,12 @@ your various tasks and how much time you spend on those tasks.
   given task.
   - Either make an edit in the buffer, or use =g r= to remove the temporary
     display.
+
+** E04S04: Column view
+
+*** Relevant links
+
+- Rainer's video: https://youtu.be/BfEAiWe3uvc.
+- Org Manual Clocking: https://orgmode.org/manual/Column-View.html.
+
+*** Video content
