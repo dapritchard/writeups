@@ -89,6 +89,7 @@ commands.
     visits each list element rather than skipping sublists).
   - =C-c C-n= to move to the next visible heading line.
   - =C-c C-p= to move to the previous visible heading line.
+  - =C-c C-u= to move to the parent headline.
   - =] h= to move to the next visible heading line on the same level, if one
     exists.
   - =[ h= to move to the previous visible heading line on the same level, if one
